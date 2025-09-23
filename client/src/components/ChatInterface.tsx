@@ -3,6 +3,7 @@ import Header from "./Header";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
+import ChatSidebar from "./ChatSidebar";
 
 interface Message {
   id: string;
@@ -21,6 +22,7 @@ export default function ChatInterface() {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -57,35 +59,44 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex h-screen bg-background">
       {/* Animated background gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 pointer-events-none"></div>
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none"></div>
       
-      <Header onToggleSidebar={() => console.log('Sidebar toggle triggered')} />
-      
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto pt-20 pb-4" data-testid="chat-messages">
-        <div className="max-w-4xl mx-auto">
-          {messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message.content}
-              isAI={message.isAI}
-              timestamp={message.timestamp}
-            />
-          ))}
-          
-          {isTyping && <TypingIndicator />}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-      
-      <ChatInput 
-        onSendMessage={handleSendMessage}
-        disabled={isTyping}
-        placeholder={isTyping ? "Joseph is thinking..." : "Ask Joseph anything..."}
+      {/* Sidebar */}
+      <ChatSidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
       />
+      
+      {/* Main Chat Area */}
+      <div className="flex flex-col flex-1 lg:ml-0">
+        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto pt-20 pb-4" data-testid="chat-messages">
+          <div className="max-w-4xl mx-auto px-4">
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message.content}
+                isAI={message.isAI}
+                timestamp={message.timestamp}
+              />
+            ))}
+            
+            {isTyping && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+        
+        <ChatInput 
+          onSendMessage={handleSendMessage}
+          disabled={isTyping}
+          placeholder={isTyping ? "Joseph is thinking..." : "Ask Joseph anything..."}
+        />
+      </div>
     </div>
   );
 }
