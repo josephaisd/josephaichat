@@ -72,7 +72,10 @@ export default function ChatInterface() {
       
       {/* Main Chat Area */}
       <div className="flex flex-col flex-1 lg:ml-0">
-        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header 
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          sidebarOpen={sidebarOpen}
+        />
         
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto pt-20 pb-4" data-testid="chat-messages">
