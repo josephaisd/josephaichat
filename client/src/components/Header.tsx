@@ -39,7 +39,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             <div className="relative flex items-center gap-3 px-6 py-3">
               <div className="relative">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 backdrop-blur-sm border border-primary/30 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary" />
+                  <span className="text-lg font-bold text-primary">J</span>
                 </div>
                 <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-background animate-pulse"></div>
               </div>
