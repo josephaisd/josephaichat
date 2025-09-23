@@ -32,22 +32,28 @@ export default function ChatInput({
   };
 
   return (
-    <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border/20 p-4">
+    <div className="sticky bottom-0 left-0 right-0 p-4">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="relative flex items-end gap-2">
-          <div className="flex-1 relative">
+          <div className="flex-1 relative group">
+            {/* Liquid glass background for input */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-2xl backdrop-blur-sm border border-primary/20 shadow-lg"></div>
+            
+            {/* Glass reflection overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-2xl pointer-events-none"></div>
+            
+            {/* Animated shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled}
-              className="min-h-[52px] max-h-32 resize-none bg-card/60 backdrop-blur-sm border-border/30 rounded-2xl pr-20 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all duration-200"
+              className="relative min-h-[52px] max-h-32 resize-none bg-transparent backdrop-blur-sm border-0 rounded-2xl pr-20 focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all duration-200 placeholder:text-muted-foreground/60"
               data-testid="input-message"
             />
-            
-            {/* Glass reflection effect */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/3 to-transparent pointer-events-none"></div>
             
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
               <Button
