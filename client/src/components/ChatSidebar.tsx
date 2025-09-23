@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Plus, Search, MoreHorizontal } from "lucide-react";
+import { MessageCircle, Plus, Search, MoreHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -81,19 +81,34 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         
         <div className="relative h-full flex flex-col p-4">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6 pt-2">
+          <div className="flex items-center justify-between mb-6 pt-16 lg:pt-2">
             <h2 className="text-lg font-semibold text-foreground">Chats</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative group"
-              data-testid="button-new-chat"
-              onClick={() => console.log('New chat triggered')}
-            >
-              {/* Glass button background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-lg backdrop-blur-sm border border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-              <Plus className="w-5 h-5 relative z-10" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Desktop sidebar toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative group hidden lg:flex"
+                data-testid="button-hide-sidebar"
+                onClick={onClose}
+              >
+                {/* Glass button background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-lg backdrop-blur-sm border border-primary/15 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <X className="w-4 h-4 relative z-10 text-primary" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative group"
+                data-testid="button-new-chat"
+                onClick={() => console.log('New chat triggered')}
+              >
+                {/* Glass button background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-lg backdrop-blur-sm border border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                <Plus className="w-5 h-5 relative z-10" />
+              </Button>
+            </div>
           </div>
 
           {/* Search */}
