@@ -74,10 +74,10 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         {/* Liquid glass background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/4 to-accent/8 backdrop-blur-lg border-r border-primary/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/4 to-accent/8 backdrop-blur-lg border-r border-primary/20 rounded-r-3xl lg:rounded-none"></div>
         
         {/* Glass reflection overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/3 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/3 to-transparent rounded-r-3xl lg:rounded-none"></div>
         
         <div className="relative h-full flex flex-col p-4">
           {/* Header */}
