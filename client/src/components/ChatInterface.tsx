@@ -4,6 +4,7 @@ import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import ChatInput from "./ChatInput";
 import ChatSidebar from "./ChatSidebar";
+import LoadingScreen from "./LoadingScreen";
 
 interface Message {
   id: string;
@@ -23,6 +24,7 @@ export default function ChatInterface() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -57,6 +59,10 @@ export default function ChatInterface() {
       setIsTyping(false);
     }, 1500 + Math.random() * 1000);
   };
+
+  if (isLoading) {
+    return <LoadingScreen onComplete={() => setIsLoading(false)} />;
+  }
 
   return (
     <div className="flex h-screen bg-background">
