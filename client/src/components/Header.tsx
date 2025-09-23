@@ -10,7 +10,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/20">
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
+        {/* Left side - Menu button for mobile */}
+        <div className="flex items-center w-20">
           <Button
             variant="ghost"
             size="icon"
@@ -20,21 +21,43 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           >
             <Bot className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm border border-primary/20 flex items-center justify-center">
-                <Bot className="w-6 h-6 text-primary" />
+        </div>
+        
+        {/* Center - Joseph AI Title with Liquid Glass Effect */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="relative group">
+            {/* Liquid glass background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-2xl backdrop-blur-sm border border-primary/20 shadow-lg"></div>
+            
+            {/* Glass reflection overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-2xl"></div>
+            
+            {/* Animated shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
+            
+            {/* Content */}
+            <div className="relative flex items-center gap-3 px-6 py-3">
+              <div className="relative">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 backdrop-blur-sm border border-primary/30 flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-primary" />
+                </div>
+                <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-background animate-pulse"></div>
               </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-background"></div>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Joseph AI</h1>
-              <p className="text-sm text-muted-foreground">Intelligent Assistant</p>
+              
+              <div className="text-center">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent tracking-tight">
+                  Joseph AI
+                </h1>
+                <p className="text-xs text-muted-foreground font-medium tracking-wide">
+                  Intelligent Assistant
+                </p>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        {/* Right side - Status and Theme Toggle */}
+        <div className="flex items-center gap-2 w-20 justify-end">
           <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-card/60 backdrop-blur-sm rounded-full border border-border/30">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-xs text-muted-foreground">Online</span>
