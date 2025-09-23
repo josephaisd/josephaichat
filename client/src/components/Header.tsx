@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/20">
+    <header className="fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between p-4">
         {/* Left side - Menu button for mobile */}
         <div className="flex items-center w-20">
@@ -56,12 +56,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           </div>
         </div>
         
-        {/* Right side - Status and Theme Toggle */}
-        <div className="flex items-center gap-2 w-20 justify-end">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-card/60 backdrop-blur-sm rounded-full border border-border/30">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs text-muted-foreground">Online</span>
-          </div>
+        {/* Right side - Theme Toggle with Glass Effect */}
+        <div className="flex items-center w-20 justify-end">
           <ThemeToggle />
         </div>
       </div>
