@@ -5,13 +5,13 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
-  const [currentText, setCurrentText] = useState("Joseph");
+  const [currentText, setCurrentText] = useState("Hello Joseph");
   const [showDots, setShowDots] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     const timer1 = setTimeout(() => {
-      setCurrentText("Joseph AI");
+      setCurrentText("Hello Joseph AI");
     }, 2000);
 
     const timer2 = setTimeout(() => {
