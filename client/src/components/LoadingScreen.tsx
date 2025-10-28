@@ -5,26 +5,26 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
-  const [currentText, setCurrentText] = useState("Hello Joseph");
+  const [currentText, setCurrentText] = useState("Joseph");
   const [showDots, setShowDots] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     const timer1 = setTimeout(() => {
-      setCurrentText("AI");
-    }, 3000);
+      setCurrentText("Joseph AI");
+    }, 2000);
 
     const timer2 = setTimeout(() => {
       setShowDots(true);
-    }, 4000);
+    }, 3000);
 
     const timer3 = setTimeout(() => {
       setFadeOut(true);
-    }, 5500);
+    }, 4500);
 
     const timer4 = setTimeout(() => {
       onComplete();
-    }, 6500);
+    }, 5500);
 
     return () => {
       clearTimeout(timer1);
@@ -93,22 +93,6 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
             <div className="w-3 h-3 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1s' }}></div>
           </div>
         )}
-
-        {/* Joseph AI branding at bottom */}
-        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-          <div className="relative group">
-            {/* Small glass container */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-xl backdrop-blur-sm border border-primary/20"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-white/3 to-transparent rounded-xl"></div>
-            
-            <div className="relative px-4 py-2 flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 backdrop-blur-sm border border-primary/30 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">J</span>
-              </div>
-              <span className="text-sm text-muted-foreground font-medium">Intelligent Assistant</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
