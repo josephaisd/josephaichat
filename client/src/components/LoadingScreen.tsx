@@ -1,36 +1,32 @@
 import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   onComplete: () => void;
 }
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
-  const [currentText, setCurrentText] = useState("Hello Joseph");
-  const [showDots, setShowDots] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     const timer1 = setTimeout(() => {
-      setCurrentText("Hello Joseph AI");
-    }, 2000);
+      setShowWelcome(true);
+    }, 1500);
 
     const timer2 = setTimeout(() => {
-      setShowDots(true);
-    }, 3000);
+      setFadeOut(true);
+    }, 4000);
 
     const timer3 = setTimeout(() => {
-      setFadeOut(true);
-    }, 4500);
-
-    const timer4 = setTimeout(() => {
       onComplete();
-    }, 5500);
+    }, 5000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
-      clearTimeout(timer4);
     };
   }, [onComplete]);
 
@@ -38,61 +34,41 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     <div className={`fixed inset-0 z-[100] bg-background flex items-center justify-center transition-opacity duration-1000 ${
       fadeOut ? 'opacity-0' : 'opacity-100'
     }`}>
-      {/* Animated background gradient - similar to Windows */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10"></div>
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-transparent"></div>
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5"></div>
       
-      {/* Subtle moving particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-2 h-2 bg-primary/20 rounded-full animate-bounce" style={{
-          left: '20%',
-          top: '30%',
-          animationDelay: '0s',
-          animationDuration: '3s'
-        }}></div>
-        <div className="absolute w-1 h-1 bg-accent/30 rounded-full animate-bounce" style={{
-          left: '70%',
-          top: '60%',
-          animationDelay: '1s',
-          animationDuration: '4s'
-        }}></div>
-        <div className="absolute w-1.5 h-1.5 bg-primary/15 rounded-full animate-bounce" style={{
-          left: '80%',
-          top: '20%',
-          animationDelay: '2s',
-          animationDuration: '5s'
-        }}></div>
-      </div>
-
-      {/* Main content container */}
+      {/* Main login container */}
       <div className="relative z-10 text-center">
-        {/* Liquid glass container for text */}
-        <div className="relative group mb-8">
-          {/* Glass background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-primary/8 to-accent/15 rounded-3xl backdrop-blur-lg border border-primary/25 shadow-2xl"></div>
-          
-          {/* Glass reflection overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-white/8 to-transparent rounded-3xl"></div>
-          
-          {/* Animated shimmer */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-3xl animate-pulse"></div>
-          
-          {/* Text content */}
-          <div className="relative px-12 py-8">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent tracking-tight transition-all duration-1000">
-              {currentText}
-            </h1>
-          </div>
+        {/* User Avatar */}
+        <div className="flex justify-center mb-6">
+          <Avatar className="w-32 h-32 border-4 border-primary/20">
+            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-4xl font-bold text-primary">
+              J
+            </AvatarFallback>
+          </Avatar>
         </div>
 
-        {/* Loading dots - Windows style */}
-        {showDots && (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-3 h-3 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1s' }}></div>
-            <div className="w-3 h-3 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1s' }}></div>
-            <div className="w-3 h-3 bg-primary/60 rounded-full animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1s' }}></div>
+        {/* Username */}
+        <h2 className="text-3xl font-semibold mb-8 text-foreground">
+          Joseph AI
+        </h2>
+
+        {/* Loading state */}
+        {!showWelcome ? (
+          <div className="flex flex-col items-center gap-4" data-testid="status-loading">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Signing in...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4 animate-in fade-in duration-500" data-testid="status-welcome">
+            <p className="text-lg text-foreground">Welcome</p>
           </div>
         )}
+      </div>
+
+      {/* Bottom text */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+        <p className="text-xs text-muted-foreground">Joseph AI Assistant</p>
       </div>
     </div>
   );
