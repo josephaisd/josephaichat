@@ -10,6 +10,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const chats = await storage.getAllChats();
       res.json(chats);
     } catch (error) {
+      console.error("Error fetching chats:", error);
       res.status(500).json({ error: "Failed to fetch chats" });
     }
   });
@@ -20,6 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const chat = await storage.createChat(validatedData);
       res.json(chat);
     } catch (error) {
+      console.error("Error creating chat:", error);
       res.status(400).json({ error: "Invalid chat data" });
     }
   });
