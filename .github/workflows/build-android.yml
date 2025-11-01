@@ -24,8 +24,8 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build web app
-      run: npm run build
+    - name: Build web app (frontend only)
+      run: npx vite build
       env:
         NODE_ENV: production
         
