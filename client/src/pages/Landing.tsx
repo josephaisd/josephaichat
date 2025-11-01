@@ -88,7 +88,7 @@ export default function Landing() {
               Welcome to Joseph AI
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Your intelligent assistant powered by GPT-4o. Get instant answers, creative help, and intelligent conversation.
+              Your intelligent assistant powered by Joseph's fast AI Laptop. Get instant answers, creative help, and intelligent conversation.
             </p>
           </div>
 
@@ -112,7 +112,7 @@ export default function Landing() {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Fast & Reliable</h3>
                 <p className="text-muted-foreground text-sm">
-                  Get instant responses powered by the latest OpenAI technology.
+                  Get instant responses powered by the latest J-AI technology.
                 </p>
               </CardContent>
             </Card>
