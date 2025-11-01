@@ -1,8 +1,12 @@
 import OpenAI from "openai";
 
-const api = new OpenAI({
-  baseURL: 'https://api.aimlapi.com/v1',
-  apiKey: process.env.AIMLAPI_API_KEY,
+const openai = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    'HTTP-Referer': process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : 'http://localhost:5000',
+    'X-Title': 'Replit Chat App',
+  },
 });
 
 interface Message {
@@ -12,12 +16,10 @@ interface Message {
 
 export async function generateAIResponse(messages: Message[]): Promise<string> {
   try {
-    const result = await api.chat.completions.create({
-      model: 'deepseek/deepseek-thinking-v3.2-exp',
+    const result = await openai.chat.completions.create({
+      model: 'openai/gpt-4o',
       messages: messages,
       temperature: 0.7,
-      top_p: 0.7,
-      frequency_penalty: 1,
       max_tokens: 4096,
     });
 
