@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import Header from "./Header";
 import MessageBubble from "./MessageBubble";
@@ -18,6 +19,7 @@ interface MessageDisplay {
 }
 
 export default function ChatInterface() {
+  const [, setLocation] = useLocation();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageDisplay[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -110,6 +112,12 @@ export default function ChatInterface() {
   };
 
   const handleSendMessage = async (content: string, imageUrl?: string) => {
+    // Easter egg: redirect to /67 if user sends exactly "67"
+    if (content.trim() === "67" && !imageUrl) {
+      setLocation("/67");
+      return;
+    }
+
     const userMessage: MessageDisplay = {
       id: Date.now().toString(),
       content,
