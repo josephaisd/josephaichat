@@ -1,13 +1,13 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    'HTTP-Referer': process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : 'http://localhost:5000',
-    'X-Title': 'Replit Chat App',
-  },
+const token = process.env.GITHUB_TOKEN;
+const endpoint = "https://models.github.ai/inference";
+const modelName = "openai/gpt-4o";
+
+const client = new OpenAI({ 
+  baseURL: endpoint, 
+  apiKey: token 
 });
 
 interface Message {
@@ -30,7 +30,8 @@ export async function generateAIResponse(messages: Message[]): Promise<string> {
             {
               type: "image_url" as const,
               image_url: {
-                url: msg.imageUrl
+                url: msg.imageUrl,
+                detail: "low" as const
               }
             }
           ]
@@ -42,14 +43,20 @@ export async function generateAIResponse(messages: Message[]): Promise<string> {
       };
     });
 
-    const result = await openai.chat.completions.create({
-      model: 'openai/gpt-4o',
-      messages: formattedMessages,
+    const response = await client.chat.completions.create({
+      model: modelName,
+      messages: [
+        { 
+          role: "system", 
+          content: "You are Joseph AI, a helpful and intelligent assistant. You provide clear, accurate, and thoughtful responses to user questions. When analyzing images, describe them in detail." 
+        },
+        ...formattedMessages
+      ],
       temperature: 0.7,
       max_tokens: 4096,
     });
 
-    return result.choices[0].message.content || "I apologize, but I couldn't generate a response. Please try again.";
+    return response.choices[0].message.content || "I apologize, but I couldn't generate a response. Please try again.";
   } catch (error) {
     console.error("AI API error:", error);
     throw new Error("Failed to generate AI response");
