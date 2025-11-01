@@ -18,9 +18,9 @@ export default function ChatInput({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const processImageFile = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -29,6 +29,30 @@ export default function ChatInput({
         setImageData(result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          processImageFile(file);
+        }
+        break;
+      }
     }
   };
 
@@ -90,9 +114,11 @@ export default function ChatInput({
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
             
             <Textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               placeholder={placeholder}
               disabled={disabled}
               className="relative min-h-[52px] max-h-32 resize-none bg-transparent backdrop-blur-sm border-0 rounded-2xl pr-20 focus:ring-2 focus:ring-primary/30 focus:outline-none transition-all duration-200 placeholder:text-muted-foreground/60"
@@ -134,7 +160,7 @@ export default function ChatInput({
         
         <div className="flex items-center justify-between mt-2 px-2">
           <p className="text-xs text-muted-foreground">
-            Press Enter to send, Shift+Enter for new line
+            Press Enter to send • Shift+Enter for new line • Paste images
           </p>
           <p className="text-xs text-muted-foreground">
             {message.length}/2000

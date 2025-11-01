@@ -150,7 +150,7 @@ export default function ChatSidebar({ isOpen, onClose, currentChatId, onSelectCh
             ))}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-primary/20">
+          <div className="mt-4 pt-4">
             <div className="relative group p-3 rounded-xl">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/6 via-primary/3 to-accent/6 rounded-xl backdrop-blur-sm border border-primary/15"></div>
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/2 to-transparent rounded-xl"></div>
