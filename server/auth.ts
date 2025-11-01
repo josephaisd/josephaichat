@@ -35,12 +35,19 @@ export function setupAuth(app: Express) {
       });
 
       (req.session as any).userId = user.id;
-
-      res.json({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        profileImageUrl: user.profileImageUrl,
+      
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        
+        res.json({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          profileImageUrl: user.profileImageUrl,
+        });
       });
     } catch (error) {
       console.error("Signup error:", error);
@@ -67,12 +74,19 @@ export function setupAuth(app: Express) {
       }
 
       (req.session as any).userId = user.id;
-
-      res.json({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        profileImageUrl: user.profileImageUrl,
+      
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        
+        res.json({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          profileImageUrl: user.profileImageUrl,
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
