@@ -104,6 +104,15 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  const handleSelectChat = (chatId: string) => {
+    setCurrentChatId(chatId);
+    setMessages([]);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+  };
+
   const handleSendMessage = async (content: string, imageUrl?: string) => {
     const userMessage: MessageDisplay = {
       id: Date.now().toString(),
@@ -179,7 +188,10 @@ export default function ChatInterface() {
       
       <ChatSidebar 
         isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+        onClose={() => setSidebarOpen(false)}
+        currentChatId={currentChatId}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
       />
       
       <div className="flex flex-col flex-1 lg:ml-0">

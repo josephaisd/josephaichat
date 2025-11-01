@@ -13,6 +13,7 @@ export interface IStorage {
   getAllChats(userId?: string): Promise<Chat[]>;
   getUserChats(userId: string): Promise<Chat[]>;
   deleteChat(id: string): Promise<void>;
+  updateChatTitle(id: string, title: string): Promise<void>;
   
   createMessage(message: InsertMessage): Promise<Message>;
   getMessages(chatId: string): Promise<Message[]>;
@@ -101,6 +102,14 @@ export class MemStorage implements IStorage {
     });
   }
 
+  async updateChatTitle(id: string, title: string): Promise<void> {
+    const chat = this.chats.get(id);
+    if (chat) {
+      chat.title = title;
+      this.chats.set(id, chat);
+    }
+  }
+
   async createMessage(message: InsertMessage): Promise<Message> {
     const id = crypto.randomUUID();
     const newMessage: Message = {
@@ -180,6 +189,10 @@ export class DbStorage implements IStorage {
 
   async deleteChat(id: string): Promise<void> {
     await db.delete(chats).where(eq(chats.id, id));
+  }
+
+  async updateChatTitle(id: string, title: string): Promise<void> {
+    await db.update(chats).set({ title }).where(eq(chats.id, id));
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {

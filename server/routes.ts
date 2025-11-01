@@ -9,6 +9,14 @@ import MemoryStore from "memorystore";
 
 const MemoryStoreSession = MemoryStore(session);
 
+function generateChatTitle(message: string): string {
+  const cleanMessage = message.trim();
+  if (cleanMessage.length <= 40) {
+    return cleanMessage;
+  }
+  return cleanMessage.substring(0, 37) + "...";
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use(
     session({
@@ -161,6 +169,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const messages = await storage.getMessages(chatId);
+      
+      if (messages.length === 1 && chat.title === "New Chat") {
+        const title = generateChatTitle(message);
+        await storage.updateChatTitle(chatId, title);
+      }
+
       const conversationHistory = messages.map((msg) => ({
         role: msg.isAi ? "assistant" as const : "user" as const,
         content: msg.content,

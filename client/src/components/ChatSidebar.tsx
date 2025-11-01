@@ -9,9 +9,12 @@ import type { Chat } from "@shared/schema";
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  currentChatId?: string | null;
+  onSelectChat: (chatId: string) => void;
+  onNewChat: () => void;
 }
 
-export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
+export default function ChatSidebar({ isOpen, onClose, currentChatId, onSelectChat, onNewChat }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   
   const { data: chats = [] } = useQuery<Chat[]>({
@@ -19,14 +22,17 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   });
 
   const createChatMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest<Chat>('/api/chats', {
+    mutationFn: async (): Promise<Chat> => {
+      const response = await apiRequest<Chat>('/api/chats', {
         method: 'POST',
         body: JSON.stringify({ title: 'New Chat' }),
       });
+      return response;
     },
-    onSuccess: () => {
+    onSuccess: (newChat) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chats'] });
+      onNewChat();
+      onSelectChat(newChat.id);
     },
   });
 
@@ -62,20 +68,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/3 to-transparent rounded-r-3xl lg:rounded-none"></div>
         
         <div className="relative h-full flex flex-col p-4">
-          <div className="flex items-center justify-between mb-6 pt-16 lg:pt-2">
+          <div className="flex items-center justify-between mb-6 pt-16 lg:pt-4">
             <h2 className="text-lg font-semibold text-foreground">Chats</h2>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative group hidden lg:flex"
-                data-testid="button-hide-sidebar"
-                onClick={onClose}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-lg backdrop-blur-sm border border-primary/15 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                <X className="w-4 h-4 relative z-10 text-primary" />
-              </Button>
-              
               <Button
                 variant="ghost"
                 size="icon"
@@ -111,8 +106,16 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 key={chat.id}
                 className="relative group p-3 rounded-xl cursor-pointer transition-all duration-200"
                 data-testid={`chat-item-${chat.id}`}
+                onClick={() => {
+                  onSelectChat(chat.id);
+                  onClose();
+                }}
               >
-                <div className="absolute inset-0 rounded-xl backdrop-blur-sm border transition-all duration-200 bg-gradient-to-r from-primary/6 via-primary/3 to-accent/6 border-primary/15 group-hover:from-primary/8 group-hover:via-primary/5 group-hover:to-accent/8"></div>
+                <div className={`absolute inset-0 rounded-xl backdrop-blur-sm border transition-all duration-200 ${
+                  currentChatId === chat.id 
+                    ? 'bg-gradient-to-r from-primary/12 via-primary/8 to-accent/12 border-primary/30' 
+                    : 'bg-gradient-to-r from-primary/6 via-primary/3 to-accent/6 border-primary/15 group-hover:from-primary/8 group-hover:via-primary/5 group-hover:to-accent/8'
+                }`}></div>
                 
                 <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-white/3 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 
