@@ -24,13 +24,12 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated && !guestMode) {
-    return <Landing />;
-  }
-
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/landing" component={Landing} />
+      <Route path="/">
+        {!isAuthenticated && !guestMode ? <Landing /> : <Home />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
