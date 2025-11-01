@@ -1,16 +1,6 @@
-import { Bot, PanelLeftClose, PanelLeft, LogOut, User } from "lucide-react";
+import { PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "./ThemeToggle";
-import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -18,27 +8,6 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderProps) {
-  const { user, isAuthenticated } = useAuth();
-
-  const handleLogout = async () => {
-    sessionStorage.removeItem("guestMode");
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
-    window.location.href = "/landing";
-  };
-
-  const getInitials = () => {
-    if (user?.name) {
-      const nameParts = user.name.split(" ");
-      if (nameParts.length >= 2) {
-        return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
-      }
-      return user.name.substring(0, 2).toUpperCase();
-    }
-    if (user?.username) {
-      return user.username.substring(0, 2).toUpperCase();
-    }
-    return "G";
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -100,49 +69,9 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
           </div>
         </div>
         
-        {/* Right side - Theme Toggle and User Menu */}
+        {/* Right side - Theme Toggle */}
         <div className="flex items-center gap-2 justify-end">
           <ThemeToggle />
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative rounded-full"
-                  data-testid="button-user-menu"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.profileImageUrl || undefined} alt="Profile" />
-                    <AvatarFallback>{getInitials()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {user?.username && (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    @{user.username}
-                  </div>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.href = "/landing"}
-              data-testid="button-login-header"
-            >
-              Sign In
-            </Button>
-          )}
         </div>
       </div>
     </header>
