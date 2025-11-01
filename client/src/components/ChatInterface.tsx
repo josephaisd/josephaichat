@@ -14,6 +14,7 @@ interface MessageDisplay {
   content: string;
   isAI: boolean;
   timestamp: string;
+  imageUrl?: string;
 }
 
 export default function ChatInterface() {
@@ -48,10 +49,10 @@ export default function ChatInterface() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ chatId, message }: { chatId: string; message: string }) => {
+    mutationFn: async ({ chatId, message, imageUrl }: { chatId: string; message: string; imageUrl?: string }) => {
       return apiRequest<Message>('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ chatId, message }),
+        body: JSON.stringify({ chatId, message, imageUrl }),
       });
     },
     onSuccess: (aiMessage, variables) => {
@@ -77,7 +78,8 @@ export default function ChatInterface() {
         id: msg.id,
         content: msg.content,
         isAI: msg.isAi,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        imageUrl: msg.imageUrl || undefined
       })));
     }
   }, [fetchedMessages]);
@@ -98,7 +100,7 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, imageUrl?: string) => {
     if (!currentChatId) {
       const newChat = await createChatMutation.mutateAsync("New Chat");
       setCurrentChatId(newChat.id);
@@ -107,12 +109,13 @@ export default function ChatInterface() {
         id: Date.now().toString(),
         content,
         isAI: false,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        imageUrl
       };
       setMessages([userMessage]);
       setIsTyping(true);
       
-      sendMessageMutation.mutate({ chatId: newChat.id, message: content });
+      sendMessageMutation.mutate({ chatId: newChat.id, message: content, imageUrl });
       return;
     }
 
@@ -120,13 +123,14 @@ export default function ChatInterface() {
       id: Date.now().toString(),
       content,
       isAI: false,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      imageUrl
     };
 
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
 
-    sendMessageMutation.mutate({ chatId: currentChatId, message: content });
+    sendMessageMutation.mutate({ chatId: currentChatId, message: content, imageUrl });
   };
 
   if (isLoading) {
@@ -163,6 +167,7 @@ export default function ChatInterface() {
                 message={message.content}
                 isAI={message.isAI}
                 timestamp={message.timestamp}
+                imageUrl={message.imageUrl}
               />
             ))}
             

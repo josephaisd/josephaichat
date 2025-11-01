@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Send, Mic } from "lucide-react";
+import { useState, useRef } from "react";
+import { Send, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, imageUrl?: string) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -15,12 +15,37 @@ export default function ChatInput({
   placeholder = "Ask Joseph anything..." 
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setImageData(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageData(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim());
+    if ((message.trim() || imageData) && !disabled) {
+      onSendMessage(message.trim(), imageData || undefined);
       setMessage("");
+      handleRemoveImage();
     }
   };
 
@@ -34,6 +59,25 @@ export default function ChatInput({
   return (
     <div className="sticky bottom-0 left-0 right-0 p-4">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+        {imagePreview && (
+          <div className="mb-2 relative inline-block">
+            <img 
+              src={imagePreview} 
+              alt="Preview" 
+              className="max-h-32 rounded-lg border border-primary/20"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background border border-primary/20"
+              onClick={handleRemoveImage}
+              data-testid="button-remove-image"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
         <div className="relative flex items-end gap-2">
           <div className="flex-1 relative group">
             {/* Liquid glass background for input */}
@@ -56,21 +100,29 @@ export default function ChatInput({
             />
             
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+                data-testid="input-image-upload"
+              />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="button-voice-input"
-                onClick={() => console.log('Voice input triggered')}
+                data-testid="button-image-upload"
+                onClick={() => fileInputRef.current?.click()}
               >
-                <Mic className="w-4 h-4" />
+                <ImagePlus className="w-4 h-4" />
               </Button>
               
               <Button
                 type="submit"
                 size="icon"
-                disabled={!message.trim() || disabled}
+                disabled={(!message.trim() && !imageData) || disabled}
                 className="h-8 w-8 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 data-testid="button-send-message"
               >

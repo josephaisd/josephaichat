@@ -5,9 +5,10 @@ interface MessageBubbleProps {
   message: string;
   isAI?: boolean;
   timestamp?: string;
+  imageUrl?: string;
 }
 
-export default function MessageBubble({ message, isAI = false, timestamp }: MessageBubbleProps) {
+export default function MessageBubble({ message, isAI = false, timestamp, imageUrl }: MessageBubbleProps) {
   return (
     <div className={`flex gap-3 p-4 ${isAI ? '' : 'flex-row-reverse'}`} data-testid={`message-${isAI ? 'ai' : 'user'}`}>
       <Avatar className="w-8 h-8 mt-1">
@@ -28,9 +29,20 @@ export default function MessageBubble({ message, isAI = false, timestamp }: Mess
           {/* Subtle shimmer on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           
-          <p className={`relative text-sm leading-relaxed ${isAI ? 'text-foreground' : 'text-foreground'}`}>
-            {message}
-          </p>
+          {imageUrl && (
+            <img 
+              src={imageUrl} 
+              alt="Message attachment" 
+              className="relative max-w-full max-h-64 rounded-lg mb-2"
+              data-testid="message-image"
+            />
+          )}
+          
+          {message && (
+            <p className={`relative text-sm leading-relaxed ${isAI ? 'text-foreground' : 'text-foreground'}`}>
+              {message}
+            </p>
+          )}
         </div>
         
         {timestamp && (

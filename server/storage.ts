@@ -1,11 +1,15 @@
 import { db } from "./db";
-import { type Chat, type InsertChat, type Message, type InsertMessage, chats, messages } from "@shared/schema";
+import { type Chat, type InsertChat, type Message, type InsertMessage, type User, type UpsertUser, chats, messages, users } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   createChat(chat: InsertChat): Promise<Chat>;
   getChat(id: string): Promise<Chat | undefined>;
-  getAllChats(): Promise<Chat[]>;
+  getAllChats(userId?: string): Promise<Chat[]>;
+  getUserChats(userId: string): Promise<Chat[]>;
   deleteChat(id: string): Promise<void>;
   
   createMessage(message: InsertMessage): Promise<Message>;
@@ -13,13 +17,34 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User> = new Map();
   private chats: Map<string, Chat> = new Map();
   private messages: Map<string, Message> = new Map();
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id!);
+    const user: User = {
+      id: userData.id!,
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      createdAt: existingUser?.createdAt ?? new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
 
   async createChat(chat: InsertChat): Promise<Chat> {
     const id = crypto.randomUUID();
     const newChat: Chat = {
       id,
+      userId: chat.userId ?? null,
       title: chat.title,
       createdAt: new Date(),
     };
@@ -31,10 +56,19 @@ export class MemStorage implements IStorage {
     return this.chats.get(id);
   }
 
-  async getAllChats(): Promise<Chat[]> {
-    return Array.from(this.chats.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+  async getAllChats(userId?: string): Promise<Chat[]> {
+    if (!userId) {
+      return [];
+    }
+    return Array.from(this.chats.values())
+      .filter(chat => chat.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getUserChats(userId: string): Promise<Chat[]> {
+    return Array.from(this.chats.values())
+      .filter(chat => chat.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async deleteChat(id: string): Promise<void> {
@@ -52,6 +86,7 @@ export class MemStorage implements IStorage {
       id,
       chatId: message.chatId,
       content: message.content,
+      imageUrl: message.imageUrl ?? null,
       isAi: message.isAi,
       createdAt: new Date(),
     };
@@ -67,18 +102,45 @@ export class MemStorage implements IStorage {
 }
 
 export class DbStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async createChat(chat: InsertChat): Promise<Chat> {
     const [newChat] = await db.insert(chats).values(chat).returning();
     return newChat;
   }
 
   async getChat(id: string): Promise<Chat | undefined> {
-    const chat = await db.select().from(chats).where(eq(chats.id, id)).limit(1);
-    return chat[0];
+    const [chat] = await db.select().from(chats).where(eq(chats.id, id)).limit(1);
+    return chat;
   }
 
-  async getAllChats(): Promise<Chat[]> {
-    return await db.select().from(chats).orderBy(desc(chats.createdAt));
+  async getAllChats(userId?: string): Promise<Chat[]> {
+    if (!userId) {
+      return [];
+    }
+    return await db.select().from(chats).where(eq(chats.userId, userId)).orderBy(desc(chats.createdAt));
+  }
+
+  async getUserChats(userId: string): Promise<Chat[]> {
+    return await db.select().from(chats).where(eq(chats.userId, userId)).orderBy(desc(chats.createdAt));
   }
 
   async deleteChat(id: string): Promise<void> {
