@@ -1,264 +1,105 @@
-import { Bot, MessageCircle, Shield, Zap } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { MessageSquare, Sparkles, Image, Zap } from "lucide-react";
+import { Link } from "wouter";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Landing() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  const [loginData, setLoginData] = useState({ username: "", password: "" });
-  const [signupData, setSignupData] = useState({ username: "", password: "", name: "" });
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await apiRequest("/api/login", {
-        method: "POST",
-        body: JSON.stringify(loginData),
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      window.location.href = "/";
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid username or password",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await apiRequest("/api/signup", {
-        method: "POST",
-        body: JSON.stringify(signupData),
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      window.location.href = "/";
-    } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message || "Failed to create account",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGuestMode = () => {
-    sessionStorage.setItem("guestMode", "true");
-    window.location.href = "/";
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 pointer-events-none"></div>
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none"></div>
-      
+    <div className="min-h-screen w-full bg-background">
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 pointer-events-none" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
+        
       <div className="relative">
         <header className="flex items-center justify-between p-6">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <span className="text-xl font-bold text-primary-foreground">J</span>
+              <Sparkles className="w-5 h-5 text-primary-foreground" data-testid="icon-logo" />
             </div>
-            <h1 className="text-2xl font-bold">Joseph AI</h1>
+            <h1 className="text-2xl font-bold text-foreground" data-testid="text-app-name">Joseph AI</h1>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button variant="default" asChild data-testid="button-header-start">
+              <Link href="/chat">
+                Get Started
+              </Link>
+            </Button>
+            <ThemeToggle />
+          </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6 py-20">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 mb-6">
-              <Bot className="w-10 h-10 text-primary" />
+        <main className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+          <div className="text-center space-y-8 mb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary" data-testid="text-badge">
+                Powered by GPT-4o
+              </span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Welcome to Joseph AI
+
+            <h2 className="text-5xl md:text-7xl font-bold text-foreground max-w-4xl mx-auto leading-tight" data-testid="text-hero-title">
+              Your Intelligent AI Assistant
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Your intelligent assistant powered by Joseph's fast AI Laptop. Get instant answers, creative help, and intelligent conversation.
+
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto" data-testid="text-hero-subtitle">
+              Chat with advanced AI, share images, and get instant responses. 
+              All your conversations saved automatically on your device.
             </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+              <Button size="lg" variant="default" className="gap-2" asChild data-testid="button-start-chatting">
+                <Link href="/chat">
+                  <MessageSquare className="h-5 w-5" />
+                  Start Chatting
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="hover-elevate">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <MessageCircle className="w-6 h-6 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="hover-elevate" data-testid="card-feature-conversations">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Natural Conversation</h3>
-                <p className="text-muted-foreground text-sm">
-                  Chat naturally with an AI that understands context and provides helpful responses.
+                <h3 className="text-xl font-semibold text-foreground">Smart Conversations</h3>
+                <p className="text-muted-foreground">
+                  Have natural conversations with GPT-4o. Ask questions, get explanations, and explore ideas together.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover-elevate">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-primary" />
+            <Card className="hover-elevate" data-testid="card-feature-images">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Image className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Fast & Reliable</h3>
-                <p className="text-muted-foreground text-sm">
-                  Get instant responses powered by the latest J-AI technology.
+                <h3 className="text-xl font-semibold text-foreground">Image Support</h3>
+                <p className="text-muted-foreground">
+                  Upload or paste images directly into the chat. AI can analyze and discuss visual content with you.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover-elevate">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-primary" />
+            <Card className="hover-elevate" data-testid="card-feature-fast">
+              <CardContent className="p-6 space-y-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Secure & Private</h3>
-                <p className="text-muted-foreground text-sm">
-                  Your conversations are private and secure with authenticated accounts.
+                <h3 className="text-xl font-semibold text-foreground">Lightning Fast</h3>
+                <p className="text-muted-foreground">
+                  All data stored locally on your device. No login required, instant access, complete privacy.
                 </p>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="max-w-md mx-auto mb-8">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
-                <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Login</CardTitle>
-                    <CardDescription>
-                      Sign in to save your chat history
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-username">Username</Label>
-                        <Input
-                          id="login-username"
-                          data-testid="input-login-username"
-                          type="text"
-                          value={loginData.username}
-                          onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                          required
-                          autoComplete="username"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password">Password</Label>
-                        <Input
-                          id="login-password"
-                          data-testid="input-login-password"
-                          type="password"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          required
-                          autoComplete="current-password"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isLoading}
-                        data-testid="button-login-submit"
-                      >
-                        {isLoading ? "Logging in..." : "Login"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Create Account</CardTitle>
-                    <CardDescription>
-                      Sign up to start saving your conversations
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSignup} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-username">Username</Label>
-                        <Input
-                          id="signup-username"
-                          data-testid="input-signup-username"
-                          type="text"
-                          value={signupData.username}
-                          onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
-                          required
-                          autoComplete="username"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name">Display Name (Optional)</Label>
-                        <Input
-                          id="signup-name"
-                          data-testid="input-signup-name"
-                          type="text"
-                          value={signupData.name}
-                          onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
-                          autoComplete="name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <Input
-                          id="signup-password"
-                          data-testid="input-signup-password"
-                          type="password"
-                          value={signupData.password}
-                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                          required
-                          autoComplete="new-password"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isLoading}
-                        data-testid="button-signup-submit"
-                      >
-                        {isLoading ? "Creating account..." : "Sign Up"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="text-center">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleGuestMode}
-              className="min-w-[200px]"
-              data-testid="button-guest"
-            >
-              Continue as Guest
-            </Button>
-            <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
-              <span className="font-semibold">Guest mode:</span> Your chat history will not be saved and will be cleared when you refresh the page.
-            </p>
           </div>
         </main>
+
+        <footer className="py-12 text-center">
+          <p className="text-sm text-muted-foreground" data-testid="text-footer">
+            Built with modern AI technology • No account required • Privacy-first design
+          </p>
+        </footer>
       </div>
     </div>
   );
