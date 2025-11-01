@@ -6,6 +6,9 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   return {
