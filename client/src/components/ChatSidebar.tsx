@@ -54,7 +54,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         />
       )}
       
-      <div className={`fixed left-0 top-0 h-full w-80 z-50 transform transition-transform duration-300 ease-in-out lg:relative ${
+      <div className={`fixed left-0 top-0 h-full w-80 z-50 transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/4 to-accent/8 backdrop-blur-lg border-r border-primary/20 rounded-r-3xl lg:rounded-none"></div>

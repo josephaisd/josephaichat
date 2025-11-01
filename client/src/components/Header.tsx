@@ -9,10 +9,10 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 lg:left-80 lg:w-[calc(100%-20rem)]">
+    <header className="fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between p-4">
-        {/* Left side - Sidebar toggle button (mobile only) */}
-        <div className="flex items-center w-12 lg:hidden">
+        {/* Left side - Sidebar toggle button */}
+        <div className="flex items-center w-12">
           <div className="relative group">
             {/* Glass button background */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-xl backdrop-blur-sm border border-primary/15 shadow-md"></div>
@@ -34,9 +34,6 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
             </Button>
           </div>
         </div>
-        
-        {/* Left side spacer for desktop */}
-        <div className="hidden lg:flex items-center w-12"></div>
         
         {/* Center - Joseph AI Title with Liquid Glass Effect - Properly centered */}
         <div className="flex-1 flex items-center justify-center">
