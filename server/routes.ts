@@ -113,6 +113,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/chat/guest", async (req, res) => {
+    try {
+      const { message, imageUrl, history } = req.body;
+      
+      const messages = [
+        ...(history || []),
+        {
+          role: 'user',
+          content: imageUrl 
+            ? [
+                { type: 'text', text: message || 'What is in this image?' },
+                { type: 'image_url', image_url: { url: imageUrl } }
+              ]
+            : message
+        }
+      ];
+
+      const aiResponse = await getAIResponse(messages);
+      res.json({ content: aiResponse });
+    } catch (error) {
+      console.error("Error in guest chat:", error);
+      res.status(500).json({ error: "Failed to get AI response" });
+    }
+  });
+
   app.post("/api/chat", async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;

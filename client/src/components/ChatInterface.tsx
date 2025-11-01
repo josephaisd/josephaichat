@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import Header from "./Header";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
@@ -18,6 +19,7 @@ interface MessageDisplay {
 }
 
 export default function ChatInterface() {
+  const { isAuthenticated } = useAuth();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageDisplay[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -27,12 +29,12 @@ export default function ChatInterface() {
 
   const { data: chats } = useQuery<Chat[]>({
     queryKey: ['/api/chats'],
-    enabled: !isLoading,
+    enabled: !isLoading && isAuthenticated,
   });
 
   const { data: fetchedMessages } = useQuery<Message[]>({
     queryKey: ['/api/chats', currentChatId, 'messages'],
-    enabled: !!currentChatId,
+    enabled: !!currentChatId && isAuthenticated,
   });
 
   const createChatMutation = useMutation({
@@ -85,12 +87,14 @@ export default function ChatInterface() {
   }, [fetchedMessages]);
 
   useEffect(() => {
-    if (!isLoading && chats && chats.length > 0 && !currentChatId) {
+    if (!isLoading && isAuthenticated && chats && chats.length > 0 && !currentChatId) {
       setCurrentChatId(chats[0].id);
-    } else if (!isLoading && (!chats || chats.length === 0) && !currentChatId) {
+    } else if (!isLoading && isAuthenticated && (!chats || chats.length === 0) && !currentChatId) {
       createChatMutation.mutate("New Chat");
+    } else if (!isLoading && !isAuthenticated && !currentChatId) {
+      setCurrentChatId("guest-chat-" + Date.now());
     }
-  }, [isLoading, chats, currentChatId]);
+  }, [isLoading, isAuthenticated, chats, currentChatId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,24 +105,6 @@ export default function ChatInterface() {
   }, [messages, isTyping]);
 
   const handleSendMessage = async (content: string, imageUrl?: string) => {
-    if (!currentChatId) {
-      const newChat = await createChatMutation.mutateAsync("New Chat");
-      setCurrentChatId(newChat.id);
-      
-      const userMessage: MessageDisplay = {
-        id: Date.now().toString(),
-        content,
-        isAI: false,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        imageUrl
-      };
-      setMessages([userMessage]);
-      setIsTyping(true);
-      
-      sendMessageMutation.mutate({ chatId: newChat.id, message: content, imageUrl });
-      return;
-    }
-
     const userMessage: MessageDisplay = {
       id: Date.now().toString(),
       content,
@@ -126,9 +112,58 @@ export default function ChatInterface() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       imageUrl
     };
-
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
+
+    if (!isAuthenticated) {
+      try {
+        const response = await fetch('/api/chat/guest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: content,
+            imageUrl,
+            history: messages.map(m => ({
+              role: m.isAI ? 'assistant' : 'user',
+              content: m.content
+            }))
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response');
+        }
+
+        const data = await response.json();
+        const aiMessage: MessageDisplay = {
+          id: Date.now().toString(),
+          content: data.content,
+          isAI: true,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } catch (error) {
+        const errorMessage: MessageDisplay = {
+          id: Date.now().toString(),
+          content: 'Sorry, I encountered an error. Please try again.',
+          isAI: true,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
+
+    if (!currentChatId) {
+      const newChat = await createChatMutation.mutateAsync("New Chat");
+      setCurrentChatId(newChat.id);
+      sendMessageMutation.mutate({ chatId: newChat.id, message: content, imageUrl });
+      return;
+    }
 
     sendMessageMutation.mutate({ chatId: currentChatId, message: content, imageUrl });
   };
