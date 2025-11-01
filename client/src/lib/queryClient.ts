@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getDeviceId } from "./deviceId";
+import { buildApiUrl } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -13,8 +14,9 @@ export async function apiRequest<T = any>(
   options?: RequestInit
 ): Promise<T> {
   const hasBody = options?.body !== undefined;
+  const fullUrl = buildApiUrl(url);
   
-  const res = await fetch(url, {
+  const res = await fetch(fullUrl, {
     ...options,
     headers: {
       ...(hasBody && { "Content-Type": "application/json" }),
@@ -34,7 +36,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const fullUrl = buildApiUrl(url);
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
       headers: {
         "X-Device-Id": getDeviceId(),
