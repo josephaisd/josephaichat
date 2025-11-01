@@ -76,7 +76,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 rounded-lg backdrop-blur-sm border border-primary/20"></div>
           <div className="relative px-6 py-3">
-            <p className="text-sm text-muted-foreground font-medium">Joseph AI Assistant</p>
+            <p className="text-sm text-muted-foreground font-medium">Powered by J AI-V1</p>
           </div>
         </div>
       </div>

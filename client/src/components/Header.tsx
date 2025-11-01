@@ -62,7 +62,7 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                   Joseph AI
                 </h1>
                 <p className="text-xs text-muted-foreground font-medium tracking-wide">
-                  Intelligent Assistant
+                  
                 </p>
               </div>
             </div>
