@@ -20,17 +20,22 @@ interface HeaderProps {
 export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderProps) {
   const { user, isAuthenticated } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.removeItem("guestMode");
-    window.location.href = "/api/logout";
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    window.location.href = "/landing";
   };
 
   const getInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (user?.name) {
+      const nameParts = user.name.split(" ");
+      if (nameParts.length >= 2) {
+        return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+      }
+      return user.name.substring(0, 2).toUpperCase();
     }
-    if (user?.email) {
-      return user.email[0].toUpperCase();
+    if (user?.username) {
+      return user.username.substring(0, 2).toUpperCase();
     }
     return "G";
   };
@@ -116,9 +121,9 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {user?.email && (
+                {user?.username && (
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    {user.email}
+                    @{user.username}
                   </div>
                 )}
                 <DropdownMenuSeparator />
@@ -132,7 +137,7 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/landing"}
               data-testid="button-login-header"
             >
               Sign In

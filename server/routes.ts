@@ -3,28 +3,34 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertChatSchema, insertMessageSchema } from "@shared/schema";
 import { generateAIResponse } from "./ai";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
+import session from "express-session";
+import MemoryStore from "memorystore";
+
+const MemoryStoreSession = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  await setupAuth(app);
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      },
+      store: new MemoryStoreSession({
+        checkPeriod: 86400000, // 24 hours
+      }),
+    })
+  );
 
-  app.get('/api/auth/user', async (req: any, res) => {
-    try {
-      if (!req.isAuthenticated() || !req.user?.claims?.sub) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  setupAuth(app);
 
   app.get("/api/chats", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.json([]);
       }
@@ -38,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chats", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.status(401).json({ error: "Must be logged in to create chats" });
       }
@@ -57,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/chats/:id", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.status(401).json({ error: "Must be logged in" });
       }
@@ -76,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats/:id/messages", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.status(401).json({ error: "Must be logged in" });
       }
@@ -95,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/messages", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.status(401).json({ error: "Must be logged in" });
       }
@@ -121,16 +127,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...(history || []),
         {
           role: 'user',
-          content: imageUrl 
-            ? [
-                { type: 'text', text: message || 'What is in this image?' },
-                { type: 'image_url', image_url: { url: imageUrl } }
-              ]
-            : message
+          content: message || 'What is in this image?',
+          imageUrl: imageUrl || null,
         }
       ];
 
-      const aiResponse = await getAIResponse(messages);
+      const aiResponse = await generateAIResponse(messages);
       res.json({ content: aiResponse });
     } catch (error) {
       console.error("Error in guest chat:", error);
@@ -140,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.session as any).userId;
       if (!userId) {
         return res.status(401).json({ error: "Must be logged in to chat" });
       }

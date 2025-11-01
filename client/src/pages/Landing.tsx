@@ -1,11 +1,61 @@
 import { Bot, MessageCircle, Shield, Zap } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [signupData, setSignupData] = useState({ username: "", password: "", name: "" });
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiRequest("/api/login", {
+        method: "POST",
+        body: JSON.stringify(loginData),
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      window.location.href = "/";
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid username or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiRequest("/api/signup", {
+        method: "POST",
+        body: JSON.stringify(signupData),
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      window.location.href = "/";
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGuestMode = () => {
@@ -80,15 +130,121 @@ export default function Landing() {
             </Card>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              onClick={handleLogin}
-              className="min-w-[200px]"
-              data-testid="button-login"
-            >
-              Sign In to Save Chats
-            </Button>
+          <div className="max-w-md mx-auto mb-8">
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
+                <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Login</CardTitle>
+                    <CardDescription>
+                      Sign in to save your chat history
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="login-username">Username</Label>
+                        <Input
+                          id="login-username"
+                          data-testid="input-login-username"
+                          type="text"
+                          value={loginData.username}
+                          onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                          required
+                          autoComplete="username"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="login-password">Password</Label>
+                        <Input
+                          id="login-password"
+                          data-testid="input-login-password"
+                          type="password"
+                          value={loginData.password}
+                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                          required
+                          autoComplete="current-password"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                        data-testid="button-login-submit"
+                      >
+                        {isLoading ? "Logging in..." : "Login"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Account</CardTitle>
+                    <CardDescription>
+                      Sign up to start saving your conversations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSignup} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-username">Username</Label>
+                        <Input
+                          id="signup-username"
+                          data-testid="input-signup-username"
+                          type="text"
+                          value={signupData.username}
+                          onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
+                          required
+                          autoComplete="username"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name">Display Name (Optional)</Label>
+                        <Input
+                          id="signup-name"
+                          data-testid="input-signup-name"
+                          type="text"
+                          value={signupData.name}
+                          onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                          autoComplete="name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <Input
+                          id="signup-password"
+                          data-testid="input-signup-password"
+                          type="password"
+                          value={signupData.password}
+                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                          required
+                          autoComplete="new-password"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                        data-testid="button-signup-submit"
+                      >
+                        {isLoading ? "Creating account..." : "Sign Up"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="text-center">
             <Button
               size="lg"
               variant="outline"
@@ -98,12 +254,10 @@ export default function Landing() {
             >
               Continue as Guest
             </Button>
+            <p className="text-sm text-muted-foreground mt-4 max-w-md mx-auto">
+              <span className="font-semibold">Guest mode:</span> Your chat history will not be saved and will be cleared when you refresh the page.
+            </p>
           </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-6 max-w-md mx-auto">
-            <span className="font-semibold">Guest mode:</span> Your chat history will not be saved and will be cleared when you refresh the page. 
-            <span className="block mt-1">Sign in to save your conversations.</span>
-          </p>
         </main>
       </div>
     </div>
