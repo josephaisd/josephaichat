@@ -106,8 +106,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = isAuth || undefined;
       const guestId = !isAuth ? getDeviceId(req) : undefined;
       
-      console.log('[Access Debug] userId:', userId, 'guestId:', guestId);
-      
       const { message, chatId, imageUrl, mode: rawMode } = req.body;
       
       // Validate and default mode
@@ -126,11 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat not found" });
       }
       
-      console.log('[Access Debug] chat.userId:', chat.userId, 'chat.guestId:', chat.guestId);
-      
       const hasAccess = (userId && chat.userId === userId) || (guestId && chat.guestId === guestId && !chat.userId);
-      console.log('[Access Debug] hasAccess:', hasAccess);
-      
       if (!hasAccess) {
         return res.status(403).json({ error: "Unauthorized" });
       }

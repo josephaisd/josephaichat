@@ -206,10 +206,6 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
   const sessionToken = (req.session as any).csrfToken;
   const headerToken = req.headers['x-csrf-token'];
   
-  console.log('[CSRF Debug] Session token:', sessionToken ? 'exists' : 'missing');
-  console.log('[CSRF Debug] Header token:', headerToken ? 'exists' : 'missing');
-  console.log('[CSRF Debug] Match:', sessionToken === headerToken);
-  
   if (!sessionToken || !headerToken || sessionToken !== headerToken) {
     return res.status(403).json({ error: "Invalid CSRF token" });
   }
