@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { insertChatSchema, insertMessageSchema } from "@shared/schema";
 import { generateAIResponse } from "./ai";
 import crypto from "crypto";
-import { setupAuth } from "./replitAuth";
+import { setupAuth } from "./auth";
 
 function generateChatTitle(message: string): string {
   const cleanMessage = message.trim();
@@ -33,26 +33,15 @@ function getUserId(req: any): string {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  await setupAuth(app);
-
-  app.get('/api/auth/user', async (req: any, res) => {
-    try {
-      if (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.claims?.sub) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  setupAuth(app);
 
   app.get("/api/chats", async (req: any, res) => {
     try {
-      const userId = getUserId(req);
-      const chats = await storage.getAllChats(userId);
+      const isAuth = (req.session as any).userId;
+      const userId = isAuth || undefined;
+      const guestId = !isAuth ? getDeviceId(req) : undefined;
+      
+      const chats = await storage.getAllChats(userId, guestId);
       res.json(chats);
     } catch (error) {
       console.error("Error fetching chats:", error);
@@ -62,10 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chats", async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      const isAuth = (req.session as any).userId;
       const chatData = {
         ...req.body,
-        userId,
+        userId: isAuth || null,
+        guestId: !isAuth ? getDeviceId(req) : null,
       };
       const validatedData = insertChatSchema.parse(chatData);
       const chat = await storage.createChat(validatedData);
@@ -78,9 +68,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/chats/:id", async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      const isAuth = (req.session as any).userId;
+      const userId = isAuth || undefined;
+      const guestId = !isAuth ? getDeviceId(req) : undefined;
+      
       const chat = await storage.getChat(req.params.id);
-      if (!chat || chat.userId !== userId) {
+      if (!chat) {
+        return res.status(404).json({ error: "Chat not found" });
+      }
+      
+      const hasAccess = (userId && chat.userId === userId) || (guestId && chat.guestId === guestId && !chat.userId);
+      if (!hasAccess) {
         return res.status(403).json({ error: "Unauthorized" });
       }
       
@@ -93,9 +91,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/chats/:id/messages", async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      const isAuth = (req.session as any).userId;
+      const userId = isAuth || undefined;
+      const guestId = !isAuth ? getDeviceId(req) : undefined;
+      
       const chat = await storage.getChat(req.params.id);
-      if (!chat || chat.userId !== userId) {
+      if (!chat) {
+        return res.status(404).json({ error: "Chat not found" });
+      }
+      
+      const hasAccess = (userId && chat.userId === userId) || (guestId && chat.guestId === guestId && !chat.userId);
+      if (!hasAccess) {
         return res.status(403).json({ error: "Unauthorized" });
       }
       
@@ -108,7 +114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat", async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      const isAuth = (req.session as any).userId;
+      const userId = isAuth || undefined;
+      const guestId = !isAuth ? getDeviceId(req) : undefined;
+      
       const { message, chatId, imageUrl, mode: rawMode } = req.body;
       
       // Validate and default mode
@@ -123,7 +132,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const chat = await storage.getChat(chatId);
-      if (!chat || chat.userId !== userId) {
+      if (!chat) {
+        return res.status(404).json({ error: "Chat not found" });
+      }
+      
+      const hasAccess = (userId && chat.userId === userId) || (guestId && chat.guestId === guestId && !chat.userId);
+      if (!hasAccess) {
         return res.status(403).json({ error: "Unauthorized" });
       }
       

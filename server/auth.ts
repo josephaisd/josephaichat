@@ -1,13 +1,41 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
+import crypto from "crypto";
+import session from "express-session";
 
 const SALT_ROUNDS = 10;
 
+function getDeviceId(req: Request): string {
+  const deviceId = req.headers['x-device-id'] as string;
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  
+  if (deviceId) {
+    return crypto.createHash('sha256').update(`${ip}-${deviceId}`).digest('hex');
+  }
+  
+  return crypto.createHash('sha256').update(ip).digest('hex');
+}
+
 export function setupAuth(app: Express) {
-  app.post("/api/signup", async (req, res) => {
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || "dev-secret-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    store: storage.sessionStore,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  };
+
+  app.set("trust proxy", 1);
+  app.use(session(sessionSettings));
+
+  app.post("/api/register", async (req, res) => {
     try {
-      const { username, password, name } = req.body;
+      const { username, password } = req.body;
 
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required" });
@@ -31,10 +59,16 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         username,
         password: hashedPassword,
-        name: name || username,
       });
 
       (req.session as any).userId = user.id;
+      
+      const guestId = getDeviceId(req);
+      try {
+        await storage.linkGuestChatsToUser(guestId, user.id);
+      } catch (error) {
+        console.error("Error linking guest chats:", error);
+      }
       
       req.session.save((err) => {
         if (err) {
@@ -45,8 +79,6 @@ export function setupAuth(app: Express) {
         res.json({
           id: user.id,
           username: user.username,
-          name: user.name,
-          profileImageUrl: user.profileImageUrl,
         });
       });
     } catch (error) {
@@ -75,6 +107,13 @@ export function setupAuth(app: Express) {
 
       (req.session as any).userId = user.id;
       
+      const guestId = getDeviceId(req);
+      try {
+        await storage.linkGuestChatsToUser(guestId, user.id);
+      } catch (error) {
+        console.error("Error linking guest chats:", error);
+      }
+      
       req.session.save((err) => {
         if (err) {
           console.error("Session save error:", err);
@@ -84,8 +123,6 @@ export function setupAuth(app: Express) {
         res.json({
           id: user.id,
           username: user.username,
-          name: user.name,
-          profileImageUrl: user.profileImageUrl,
         });
       });
     } catch (error) {
@@ -103,7 +140,7 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/auth/user", async (req, res) => {
+  app.get("/api/user", async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       
@@ -119,8 +156,6 @@ export function setupAuth(app: Express) {
       res.json({
         id: user.id,
         username: user.username,
-        name: user.name,
-        profileImageUrl: user.profileImageUrl,
       });
     } catch (error) {
       console.error("Get user error:", error);

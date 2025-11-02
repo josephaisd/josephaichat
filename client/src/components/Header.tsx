@@ -22,22 +22,12 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
   
   const getDisplayName = () => {
     if (!user) return '';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    if (user.firstName) return user.firstName;
-    if (user.email) return user.email;
-    return 'User';
+    return user.username || 'User';
   };
   
   const getInitials = () => {
     if (!user) return 'G';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user.firstName) return user.firstName[0].toUpperCase();
-    if (user.email) return user.email[0].toUpperCase();
-    return 'U';
+    return user.username ? user.username.substring(0, 2).toUpperCase() : 'U';
   };
 
   return (
@@ -113,7 +103,6 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                       data-testid="button-user-menu"
                     >
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={user?.profileImageUrl || undefined} alt={getDisplayName()} className="object-cover" />
                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {getInitials()}
                         </AvatarFallback>
@@ -124,19 +113,15 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
-                        {user?.email && (
-                          <p className="text-xs leading-none text-muted-foreground">
-                            {user.email}
-                          </p>
-                        )}
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <a href="/api/logout" className="cursor-pointer" data-testid="button-logout">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                      </a>
+                    <DropdownMenuItem onClick={() => {
+                      fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                        .then(() => window.location.reload());
+                    }} data-testid="button-logout">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -148,14 +133,12 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    asChild
+                    onClick={() => window.location.href = '/auth'}
                     className="relative bg-transparent hover:bg-transparent border-0 gap-2"
                     data-testid="button-login"
                   >
-                    <a href="/api/login">
-                      <LogIn className="w-4 h-4" />
-                      <span className="font-medium">Log in</span>
-                    </a>
+                    <LogIn className="w-4 h-4" />
+                    <span className="font-medium">Log in</span>
                   </Button>
                 </div>
               )}

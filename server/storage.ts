@@ -1,39 +1,70 @@
 import { db } from "./db";
-import { type Chat, type InsertChat, type Message, type InsertMessage, type User, type UpsertUser, chats, messages, users } from "@shared/schema";
+import { type Chat, type InsertChat, type Message, type InsertMessage, type User, type UpsertUser, type InsertUser, chats, messages, users } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   createChat(chat: InsertChat): Promise<Chat>;
   getChat(id: string): Promise<Chat | undefined>;
-  getAllChats(userId?: string): Promise<Chat[]>;
+  getAllChats(userId?: string, guestId?: string): Promise<Chat[]>;
   getUserChats(userId: string): Promise<Chat[]>;
   deleteChat(id: string): Promise<void>;
   updateChatTitle(id: string, title: string): Promise<void>;
+  linkGuestChatsToUser(guestId: string, userId: string): Promise<void>;
   
   createMessage(message: InsertMessage): Promise<Message>;
   getMessages(chatId: string): Promise<Message[]>;
+  
+  sessionStore: session.SessionStore;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private chats: Map<string, Chat> = new Map();
   private messages: Map<string, Message> = new Map();
+  public sessionStore: session.SessionStore;
+
+  constructor() {
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000,
+    });
+  }
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const id = crypto.randomUUID();
+    const user: User = {
+      id,
+      username: userData.username,
+      password: userData.password,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(id, user);
+    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existingUser = this.users.get(userData.id!);
     const user: User = {
       id: userData.id!,
-      email: userData.email ?? null,
-      firstName: userData.firstName ?? null,
-      lastName: userData.lastName ?? null,
-      profileImageUrl: userData.profileImageUrl ?? null,
+      username: userData.username!,
+      password: userData.password!,
       createdAt: existingUser?.createdAt ?? new Date(),
       updatedAt: new Date(),
     };
@@ -46,6 +77,7 @@ export class MemStorage implements IStorage {
     const newChat: Chat = {
       id,
       userId: chat.userId ?? null,
+      guestId: chat.guestId ?? null,
       title: chat.title,
       createdAt: new Date(),
     };
@@ -57,12 +89,16 @@ export class MemStorage implements IStorage {
     return this.chats.get(id);
   }
 
-  async getAllChats(userId?: string): Promise<Chat[]> {
-    if (!userId) {
+  async getAllChats(userId?: string, guestId?: string): Promise<Chat[]> {
+    if (!userId && !guestId) {
       return [];
     }
     return Array.from(this.chats.values())
-      .filter(chat => chat.userId === userId)
+      .filter(chat => {
+        if (userId && chat.userId === userId) return true;
+        if (guestId && chat.guestId === guestId && !chat.userId) return true;
+        return false;
+      })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
@@ -89,6 +125,16 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async linkGuestChatsToUser(guestId: string, userId: string): Promise<void> {
+    Array.from(this.chats.values()).forEach(chat => {
+      if (chat.guestId === guestId && !chat.userId) {
+        chat.userId = userId;
+        chat.guestId = null;
+        this.chats.set(chat.id, chat);
+      }
+    });
+  }
+
   async createMessage(message: InsertMessage): Promise<Message> {
     const id = crypto.randomUUID();
     const newMessage: Message = {
@@ -111,8 +157,29 @@ export class MemStorage implements IStorage {
 }
 
 export class DbStorage implements IStorage {
+  public sessionStore: session.SessionStore;
+
+  constructor() {
+    const PostgresSessionStore = require("connect-pg-simple")(session);
+    this.sessionStore = new PostgresSessionStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false,
+      tableName: "sessions",
+    });
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
 
@@ -141,11 +208,22 @@ export class DbStorage implements IStorage {
     return chat;
   }
 
-  async getAllChats(userId?: string): Promise<Chat[]> {
-    if (!userId) {
+  async getAllChats(userId?: string, guestId?: string): Promise<Chat[]> {
+    if (!userId && !guestId) {
       return [];
     }
-    return await db.select().from(chats).where(eq(chats.userId, userId)).orderBy(desc(chats.createdAt));
+    
+    const { or, and, isNull } = await import("drizzle-orm");
+    
+    const conditions = [];
+    if (userId) {
+      conditions.push(eq(chats.userId, userId));
+    }
+    if (guestId) {
+      conditions.push(and(eq(chats.guestId, guestId), isNull(chats.userId)));
+    }
+    
+    return await db.select().from(chats).where(or(...conditions)).orderBy(desc(chats.createdAt));
   }
 
   async getUserChats(userId: string): Promise<Chat[]> {
@@ -158,6 +236,13 @@ export class DbStorage implements IStorage {
 
   async updateChatTitle(id: string, title: string): Promise<void> {
     await db.update(chats).set({ title }).where(eq(chats.id, id));
+  }
+
+  async linkGuestChatsToUser(guestId: string, userId: string): Promise<void> {
+    const { and, isNull } = await import("drizzle-orm");
+    await db.update(chats)
+      .set({ userId, guestId: null })
+      .where(and(eq(chats.guestId, guestId), isNull(chats.userId)));
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {
