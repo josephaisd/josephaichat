@@ -1,6 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getDeviceId } from "./deviceId";
 import { buildApiUrl } from "./config";
+import { getCsrfToken } from "./csrf";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -15,12 +16,14 @@ export async function apiRequest<T = any>(
 ): Promise<T> {
   const hasBody = options?.body !== undefined;
   const fullUrl = buildApiUrl(url);
+  const csrfToken = getCsrfToken();
   
   const res = await fetch(fullUrl, {
     ...options,
     headers: {
       ...(hasBody && { "Content-Type": "application/json" }),
       "X-Device-Id": getDeviceId(),
+      ...(csrfToken && { "X-CSRF-Token": csrfToken }),
       ...options?.headers,
     },
     credentials: "include",

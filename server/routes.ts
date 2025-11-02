@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { insertChatSchema, insertMessageSchema } from "@shared/schema";
 import { generateAIResponse } from "./ai";
 import crypto from "crypto";
-import { setupAuth } from "./auth";
+import { setupAuth, isAuthenticated } from "./auth";
 
 function generateChatTitle(message: string): string {
   const cleanMessage = message.trim();
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/chats", async (req: any, res) => {
+  app.post("/api/chats", isAuthenticated, async (req: any, res) => {
     try {
       const isAuth = (req.session as any).userId;
       const chatData = {
@@ -66,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/chats/:id", async (req: any, res) => {
+  app.delete("/api/chats/:id", isAuthenticated, async (req: any, res) => {
     try {
       const isAuth = (req.session as any).userId;
       const userId = isAuth || undefined;
@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/chat", async (req: any, res) => {
+  app.post("/api/chat", isAuthenticated, async (req: any, res) => {
     try {
       const isAuth = (req.session as any).userId;
       const userId = isAuth || undefined;

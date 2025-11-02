@@ -26,6 +26,7 @@ export function setupAuth(app: Express) {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   };
@@ -33,7 +34,39 @@ export function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
 
-  app.post("/api/register", async (req, res) => {
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+
+  const csrfMiddleware = (req: any, res: any, next: any) => {
+    const sessionToken = (req.session as any).csrfToken;
+    const headerToken = req.headers['x-csrf-token'];
+    
+    if (!sessionToken || !headerToken || sessionToken !== headerToken) {
+      return res.status(403).json({ error: "Invalid CSRF token" });
+    }
+    
+    next();
+  };
+
+  app.use((req, res, next) => {
+    if (!(req.session as any).csrfToken) {
+      (req.session as any).csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    
+    res.cookie('csrf-token', (req.session as any).csrfToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    });
+    
+    next();
+  });
+
+  app.post("/api/register", csrfMiddleware, async (req, res) => {
     try {
       const { username, password } = req.body;
 
@@ -87,7 +120,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", async (req, res) => {
+  app.post("/api/login", csrfMiddleware, async (req, res) => {
     try {
       const { username, password } = req.body;
 
@@ -131,7 +164,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/logout", (req, res) => {
+  app.post("/api/logout", csrfMiddleware, (req, res) => {
     req.session.destroy((err) => {
       if (err) {
         return res.status(500).json({ error: "Failed to log out" });
@@ -165,8 +198,16 @@ export function setupAuth(app: Express) {
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  const sessionToken = (req.session as any).csrfToken;
+  const headerToken = req.headers['x-csrf-token'];
+  
+  if (!sessionToken || !headerToken || sessionToken !== headerToken) {
+    return res.status(403).json({ error: "Invalid CSRF token" });
+  }
+  
   if ((req.session as any).userId) {
     return next();
   }
-  res.status(401).json({ error: "Unauthorized" });
+  
+  next();
 }

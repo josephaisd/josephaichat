@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getCsrfToken } from "@/lib/csrf";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -117,7 +118,12 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => {
-                      fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                      const csrfToken = getCsrfToken();
+                      fetch('/api/logout', { 
+                        method: 'POST', 
+                        credentials: 'include',
+                        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                      })
                         .then(() => window.location.reload());
                     }} data-testid="button-logout">
                       <LogOut className="mr-2 h-4 w-4" />

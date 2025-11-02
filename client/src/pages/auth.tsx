@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
+import { getCsrfToken } from "@/lib/csrf";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -51,9 +52,13 @@ export default function AuthPage() {
   const onLogin = async (data: LoginForm) => {
     setIsLoading(true);
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        },
         credentials: "include",
         body: JSON.stringify(data),
       });
@@ -83,9 +88,13 @@ export default function AuthPage() {
   const onSignup = async (data: SignupForm) => {
     setIsLoading(true);
     try {
+      const csrfToken = getCsrfToken();
       const response = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(csrfToken && { "X-CSRF-Token": csrfToken }),
+        },
         credentials: "include",
         body: JSON.stringify({
           username: data.username,
