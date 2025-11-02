@@ -42,6 +42,14 @@ export function setupAuth(app: Express) {
   });
 
   const csrfMiddleware = (req: any, res: any, next: any) => {
+    // Skip CSRF validation for mobile apps (they use X-Device-Id and aren't vulnerable to CSRF)
+    const isMobileApp = req.headers['x-device-id'] && req.headers['user-agent']?.includes('Capacitor');
+    
+    if (isMobileApp) {
+      return next();
+    }
+    
+    // For web browsers, validate CSRF token
     const sessionToken = (req.session as any).csrfToken;
     const headerToken = req.headers['x-csrf-token'];
     
@@ -203,11 +211,17 @@ export function setupAuth(app: Express) {
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  const sessionToken = (req.session as any).csrfToken;
-  const headerToken = req.headers['x-csrf-token'];
+  // Skip CSRF validation for mobile apps (they use X-Device-Id and aren't vulnerable to CSRF)
+  const isMobileApp = req.headers['x-device-id'] && req.headers['user-agent']?.includes('Capacitor');
   
-  if (!sessionToken || !headerToken || sessionToken !== headerToken) {
-    return res.status(403).json({ error: "Invalid CSRF token" });
+  if (!isMobileApp) {
+    // For web browsers, validate CSRF token
+    const sessionToken = (req.session as any).csrfToken;
+    const headerToken = req.headers['x-csrf-token'];
+    
+    if (!sessionToken || !headerToken || sessionToken !== headerToken) {
+      return res.status(403).json({ error: "Invalid CSRF token" });
+    }
   }
   
   if ((req.session as any).userId) {
