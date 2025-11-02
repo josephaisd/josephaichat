@@ -86,7 +86,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat", async (req: any, res) => {
     try {
       const deviceId = getDeviceId(req);
-      const { message, chatId, imageUrl } = req.body;
+      const { message, chatId, imageUrl, mode: rawMode } = req.body;
+      
+      // Validate and default mode
+      let mode: import('../shared/ai-modes.js').AiMode = 'standard';
+      if (rawMode) {
+        const { aiModeSchema } = await import('../shared/ai-modes.js');
+        const modeResult = aiModeSchema.safeParse(rawMode);
+        if (!modeResult.success) {
+          return res.status(400).json({ error: "Invalid AI mode" });
+        }
+        mode = modeResult.data as import('../shared/ai-modes.js').AiMode;
+      }
+      
       const chat = await storage.getChat(chatId);
       if (!chat || chat.userId !== deviceId) {
         return res.status(403).json({ error: "Unauthorized" });
@@ -112,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: msg.imageUrl,
       }));
 
-      const aiResponse = await generateAIResponse(conversationHistory);
+      const aiResponse = await generateAIResponse(conversationHistory, mode);
       
       const aiMessage = await storage.createMessage({
         chatId,

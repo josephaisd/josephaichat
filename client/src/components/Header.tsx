@@ -1,13 +1,23 @@
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AI_MODE_CONFIGS, type AiMode } from "@shared/ai-modes";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  selectedMode?: AiMode;
+  onModeChange?: (mode: AiMode) => void;
 }
 
-export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderProps) {
+export default function Header({ onToggleSidebar, sidebarOpen = false, selectedMode = 'standard', onModeChange }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -69,8 +79,32 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
           </div>
         </div>
         
-        {/* Right side - Theme Toggle */}
+        {/* Right side - Mode selector and Theme Toggle */}
         <div className="flex items-center gap-2 justify-end">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-xl backdrop-blur-sm border border-primary/15 shadow-md"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-white/4 to-transparent rounded-xl"></div>
+            
+            <Select value={selectedMode} onValueChange={onModeChange}>
+              <SelectTrigger 
+                className="relative bg-transparent hover:bg-transparent border-0 w-[140px] h-10 text-sm font-medium"
+                data-testid="select-ai-mode"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(AI_MODE_CONFIGS).map((mode) => (
+                  <SelectItem key={mode.id} value={mode.id} data-testid={`mode-${mode.id}`}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{mode.name}</span>
+                      <span className="text-xs text-muted-foreground">{mode.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <ThemeToggle />
         </div>
       </div>

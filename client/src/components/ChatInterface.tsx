@@ -9,6 +9,7 @@ import ChatInput from "./ChatInput";
 import ChatSidebar from "./ChatSidebar";
 import LoadingScreen from "./LoadingScreen";
 import type { Chat, Message } from "@shared/schema";
+import { AI_MODES, type AiMode } from "@shared/ai-modes";
 
 interface MessageDisplay {
   id: string;
@@ -25,6 +26,7 @@ export default function ChatInterface() {
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiMode, setAiMode] = useState<AiMode>(AI_MODES.STANDARD);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: chats } = useQuery<Chat[]>({
@@ -51,10 +53,10 @@ export default function ChatInterface() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ chatId, message, imageUrl }: { chatId: string; message: string; imageUrl?: string }) => {
+    mutationFn: async ({ chatId, message, imageUrl, mode }: { chatId: string; message: string; imageUrl?: string; mode?: AiMode }) => {
       return apiRequest<Message>('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ chatId, message, imageUrl }),
+        body: JSON.stringify({ chatId, message, imageUrl, mode }),
       });
     },
     onSuccess: (aiMessage, variables) => {
@@ -131,11 +133,11 @@ export default function ChatInterface() {
     if (!currentChatId) {
       const newChat = await createChatMutation.mutateAsync("New Chat");
       setCurrentChatId(newChat.id);
-      sendMessageMutation.mutate({ chatId: newChat.id, message: content, imageUrl });
+      sendMessageMutation.mutate({ chatId: newChat.id, message: content, imageUrl, mode: aiMode });
       return;
     }
 
-    sendMessageMutation.mutate({ chatId: currentChatId, message: content, imageUrl });
+    sendMessageMutation.mutate({ chatId: currentChatId, message: content, imageUrl, mode: aiMode });
   };
 
   if (isLoading) {
@@ -159,6 +161,8 @@ export default function ChatInterface() {
         <Header 
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
           sidebarOpen={sidebarOpen}
+          selectedMode={aiMode}
+          onModeChange={setAiMode}
         />
         
         <div className="flex-1 overflow-y-auto pt-20 pb-4" data-testid="chat-messages">

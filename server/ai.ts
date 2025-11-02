@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { AI_MODE_CONFIGS, AI_MODES, type AiMode } from "../shared/ai-modes.js";
 
 const token = process.env.GITHUB_TOKEN;
 const endpoint = "https://models.github.ai/inference";
@@ -16,7 +17,7 @@ interface Message {
   imageUrl?: string | null;
 }
 
-export async function generateAIResponse(messages: Message[]): Promise<string> {
+export async function generateAIResponse(messages: Message[], mode: AiMode = AI_MODES.STANDARD): Promise<string> {
   try {
     const formattedMessages: ChatCompletionMessageParam[] = messages.map((msg) => {
       if (msg.imageUrl && msg.role === "user") {
@@ -43,12 +44,15 @@ export async function generateAIResponse(messages: Message[]): Promise<string> {
       };
     });
 
+    // Get system prompt based on mode
+    const modeConfig = AI_MODE_CONFIGS[mode] || AI_MODE_CONFIGS[AI_MODES.STANDARD];
+    
     const response = await client.chat.completions.create({
       model: modelName,
       messages: [
         { 
           role: "system", 
-          content: "You are Joseph AI, a helpful and intelligent assistant. You provide clear, accurate, and thoughtful responses to user questions. When analyzing images, describe them in detail." 
+          content: modeConfig.systemPrompt
         },
         ...formattedMessages
       ],
