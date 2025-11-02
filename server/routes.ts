@@ -3,8 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertChatSchema, insertMessageSchema } from "@shared/schema";
 import { generateAIResponse } from "./ai";
-import crypto from "crypto";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, getDeviceId } from "./auth";
 
 function generateChatTitle(message: string): string {
   const cleanMessage = message.trim();
@@ -12,17 +11,6 @@ function generateChatTitle(message: string): string {
     return cleanMessage;
   }
   return cleanMessage.substring(0, 37) + "...";
-}
-
-function getDeviceId(req: Request): string {
-  const deviceId = req.headers['x-device-id'] as string;
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
-  
-  if (deviceId) {
-    return crypto.createHash('sha256').update(`${ip}-${deviceId}`).digest('hex');
-  }
-  
-  return crypto.createHash('sha256').update(ip).digest('hex');
 }
 
 function getUserId(req: any): string {

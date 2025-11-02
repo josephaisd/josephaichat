@@ -6,14 +6,14 @@ import session from "express-session";
 
 const SALT_ROUNDS = 10;
 
-function getDeviceId(req: Request): string {
+export function getDeviceId(req: Request): string {
   const deviceId = req.headers['x-device-id'] as string;
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
   
   if (deviceId) {
-    return crypto.createHash('sha256').update(`${ip}-${deviceId}`).digest('hex');
+    return crypto.createHash('sha256').update(deviceId).digest('hex');
   }
   
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
   return crypto.createHash('sha256').update(ip).digest('hex');
 }
 
