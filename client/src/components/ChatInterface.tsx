@@ -161,8 +161,6 @@ export default function ChatInterface() {
         <Header 
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
           sidebarOpen={sidebarOpen}
-          selectedMode={aiMode}
-          onModeChange={setAiMode}
         />
         
         <div className="flex-1 overflow-y-auto pt-20 pb-4" data-testid="chat-messages">
@@ -192,6 +190,8 @@ export default function ChatInterface() {
           onSendMessage={handleSendMessage}
           disabled={isTyping}
           placeholder={isTyping ? "Joseph is thinking..." : "Ask Joseph anything..."}
+          selectedMode={aiMode}
+          onModeChange={setAiMode}
         />
       </div>
     </div>

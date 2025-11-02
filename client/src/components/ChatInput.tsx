@@ -1,18 +1,30 @@
 import { useState, useRef } from "react";
-import { Send, ImagePlus, X } from "lucide-react";
+import { Send, ImagePlus, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AI_MODE_CONFIGS, type AiMode } from "@shared/ai-modes";
 
 interface ChatInputProps {
   onSendMessage: (message: string, imageUrl?: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  selectedMode?: AiMode;
+  onModeChange?: (mode: AiMode) => void;
 }
 
 export default function ChatInput({ 
   onSendMessage, 
   disabled = false, 
-  placeholder = "Ask Joseph anything..." 
+  placeholder = "Ask Joseph anything...",
+  selectedMode = 'standard',
+  onModeChange
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -134,6 +146,26 @@ export default function ChatInput({
                 onChange={handleImageSelect}
                 data-testid="input-image-upload"
               />
+              
+              <Select value={selectedMode} onValueChange={onModeChange}>
+                <SelectTrigger 
+                  className="h-8 w-8 p-0 border-0 bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="select-ai-mode"
+                >
+                  <Sparkles className="w-4 h-4" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(AI_MODE_CONFIGS).map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id} data-testid={`mode-${mode.id}`}>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{mode.name}</span>
+                        <span className="text-xs text-muted-foreground">{mode.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
               <Button
                 type="button"
                 variant="ghost"
