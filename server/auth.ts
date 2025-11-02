@@ -55,6 +55,11 @@ export function setupAuth(app: Express) {
   app.use((req, res, next) => {
     if (!(req.session as any).csrfToken) {
       (req.session as any).csrfToken = crypto.randomBytes(32).toString('hex');
+      req.session.save((err) => {
+        if (err) {
+          console.error('Failed to save session:', err);
+        }
+      });
     }
     
     res.cookie('csrf-token', (req.session as any).csrfToken, {
