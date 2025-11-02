@@ -4,8 +4,6 @@ import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: { username: string; password: string; name?: string }): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   createChat(chat: InsertChat): Promise<Chat>;
@@ -28,32 +26,13 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(u => u.username === username);
-  }
-
-  async createUser(userData: { username: string; password: string; name?: string }): Promise<User> {
-    const id = crypto.randomUUID();
-    const user: User = {
-      id,
-      username: userData.username,
-      password: userData.password,
-      name: userData.name ?? null,
-      profileImageUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.users.set(id, user);
-    return user;
-  }
-
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existingUser = this.users.get(userData.id!);
     const user: User = {
       id: userData.id!,
-      username: userData.username!,
-      password: userData.password!,
-      name: userData.name ?? null,
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
       profileImageUrl: userData.profileImageUrl ?? null,
       createdAt: existingUser?.createdAt ?? new Date(),
       updatedAt: new Date(),
@@ -134,20 +113,6 @@ export class MemStorage implements IStorage {
 export class DbStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
-  async createUser(userData: { username: string; password: string; name?: string }): Promise<User> {
-    const [user] = await db.insert(users).values({
-      username: userData.username,
-      password: userData.password,
-      name: userData.name ?? null,
-    }).returning();
     return user;
   }
 

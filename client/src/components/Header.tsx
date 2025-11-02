@@ -1,6 +1,16 @@
-import { PanelLeftClose, PanelLeft } from "lucide-react";
+import { PanelLeftClose, PanelLeft, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -8,6 +18,27 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderProps) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  const getDisplayName = () => {
+    if (!user) return '';
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    if (user.firstName) return user.firstName;
+    if (user.email) return user.email;
+    return 'User';
+  };
+  
+  const getInitials = () => {
+    if (!user) return 'G';
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) return user.firstName[0].toUpperCase();
+    if (user.email) return user.email[0].toUpperCase();
+    return 'U';
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -69,8 +100,67 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
           </div>
         </div>
         
-        {/* Right side - Theme Toggle */}
+        {/* Right side - User menu and Theme Toggle */}
         <div className="flex items-center gap-2 justify-end">
+          {!isLoading && (
+            <>
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="relative h-10 w-10 rounded-full"
+                      data-testid="button-user-menu"
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user?.profileImageUrl || undefined} alt={getDisplayName()} className="object-cover" />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
+                        {user?.email && (
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <a href="/api/logout" className="cursor-pointer" data-testid="button-logout">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-primary/4 to-accent/8 rounded-xl backdrop-blur-sm border border-primary/15 shadow-md"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-white/4 to-transparent rounded-xl"></div>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    asChild
+                    className="relative bg-transparent hover:bg-transparent border-0 gap-2"
+                    data-testid="button-login"
+                  >
+                    <a href="/api/login">
+                      <LogIn className="w-4 h-4" />
+                      <span className="font-medium">Log in</span>
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
           <ThemeToggle />
         </div>
       </div>
