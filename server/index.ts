@@ -1,8 +1,18 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// CORS configuration for mobile app support
+app.use(cors({
+  origin: true, // Allow all origins (mobile apps need this)
+  credentials: true, // Allow cookies and auth headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Id', 'X-CSRF-Token'],
+  exposedHeaders: ['Set-Cookie'],
+}));
 
 // Health check endpoint - responds immediately for deployment health checks
 app.get("/", (req, res, next) => {
