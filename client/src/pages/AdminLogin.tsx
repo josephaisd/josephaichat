@@ -19,30 +19,22 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const response = await apiRequest("/api/admin/login", {
+      const data = await apiRequest("/api/admin/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in as admin",
-        });
-        setLocation("/admin/dashboard");
-      } else {
-        const data = await response.json();
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: data.error || "Invalid credentials",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "Logged in as admin",
+      });
+      setLocation("/admin/dashboard");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to login";
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to login",
+        description: errorMessage.includes("401") ? "Invalid credentials" : "Failed to login",
       });
     } finally {
       setIsLoading(false);
