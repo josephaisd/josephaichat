@@ -42,7 +42,7 @@ function getRandomInjection(
     return null;
   }
 
-  const shouldInject = Math.random() < 0.1;
+  const shouldInject = Math.random() < 0.25;
   
   if (shouldInject) {
     const randomIndex = Math.floor(Math.random() * randomInjections.length);
