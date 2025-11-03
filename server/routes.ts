@@ -1,9 +1,9 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertChatSchema, insertMessageSchema } from "@shared/schema";
+import { insertChatSchema, insertMessageSchema, insertCustomModelConfigSchema } from "@shared/schema";
 import { generateAIResponse } from "./ai";
-import { setupAuth, isAuthenticated, getDeviceId } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, getDeviceId } from "./auth";
 
 function generateChatTitle(message: string): string {
   const cleanMessage = message.trim();
@@ -161,6 +161,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Chat error:", error);
       res.status(500).json({ error: "Failed to process chat message" });
+    }
+  });
+
+  app.get("/api/admin/model-config/:modeKey", isAdmin, async (req, res) => {
+    try {
+      const { modeKey } = req.params;
+      
+      if (!modeKey) {
+        return res.status(400).json({ error: "Mode key is required" });
+      }
+      
+      const config = await storage.getCustomModelConfig(modeKey);
+      
+      if (!config) {
+        return res.status(404).json({ error: "Configuration not found" });
+      }
+      
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching model config:", error);
+      res.status(500).json({ error: "Failed to fetch model configuration" });
+    }
+  });
+
+  app.post("/api/admin/model-config", isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertCustomModelConfigSchema.parse(req.body);
+      
+      const config = await storage.upsertCustomModelConfig(validatedData);
+      
+      res.json(config);
+    } catch (error: any) {
+      console.error("Error saving model config:", error);
+      
+      if (error.name === "ZodError") {
+        return res.status(400).json({ 
+          error: "Invalid configuration data", 
+          details: error.errors 
+        });
+      }
+      
+      res.status(500).json({ error: "Failed to save model configuration" });
     }
   });
 

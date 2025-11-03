@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import AuthPage from "@/pages/auth";
+import AdminLogin from "@/pages/AdminLogin";
+import AdminDashboard from "@/pages/AdminDashboard";
 import SixtySevenPage from "@/pages/SixtySevenPage";
 import NotFound from "@/pages/not-found";
 
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/landing" component={Landing} />
       <Route path="/chat" component={Home} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/67" component={SixtySevenPage} />
       <Route component={NotFound} />
     </Switch>
