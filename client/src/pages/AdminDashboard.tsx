@@ -31,10 +31,7 @@ export default function AdminDashboard() {
 
   const checkAdminStatus = async () => {
     try {
-      const response = await apiRequest("/api/admin/status");
-      if (!response.ok) {
-        setLocation("/admin/login");
-      }
+      await apiRequest("/api/admin/status");
     } catch (error) {
       setLocation("/admin/login");
     }
@@ -42,13 +39,10 @@ export default function AdminDashboard() {
 
   const loadModelConfig = async () => {
     try {
-      const response = await apiRequest("/api/admin/model-config/j-realistic");
-      if (response.ok) {
-        const data = await response.json();
-        setBasePrompt(data.basePrompt || "");
-        setEventTriggers(Array.isArray(data.eventTriggers) ? data.eventTriggers : []);
-        setRandomInjections(Array.isArray(data.randomInjections) ? data.randomInjections : []);
-      }
+      const data = await apiRequest("/api/admin/model-config/j-realistic");
+      setBasePrompt(data.basePrompt || "");
+      setEventTriggers(Array.isArray(data.eventTriggers) ? data.eventTriggers : []);
+      setRandomInjections(Array.isArray(data.randomInjections) ? data.randomInjections : []);
     } catch (error) {
       console.error("Failed to load model config:", error);
     } finally {
@@ -59,7 +53,7 @@ export default function AdminDashboard() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await apiRequest("/api/admin/model-config", {
+      await apiRequest("/api/admin/model-config", {
         method: "POST",
         body: JSON.stringify({
           modeKey: "j-realistic",
@@ -69,19 +63,10 @@ export default function AdminDashboard() {
         }),
       });
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Model configuration saved successfully",
-        });
-      } else {
-        const data = await response.json();
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: data.error || "Failed to save configuration",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Model configuration saved successfully",
+      });
     } catch (error) {
       toast({
         variant: "destructive",
