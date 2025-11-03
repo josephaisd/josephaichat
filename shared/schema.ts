@@ -21,6 +21,22 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username").unique().notNull(),
+  password: varchar("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const customModelConfigs = pgTable("custom_model_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  modeKey: varchar("mode_key").unique().notNull(),
+  basePrompt: text("base_prompt").notNull(),
+  eventTriggers: jsonb("event_triggers").notNull().default(sql`'[]'`),
+  randomInjections: jsonb("random_injections").notNull().default(sql`'[]'`),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const chats = pgTable("chats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
@@ -56,6 +72,22 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCustomModelConfigSchema = createInsertSchema(customModelConfigs).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  eventTriggers: z.array(z.object({
+    trigger: z.string(),
+    response: z.string(),
+  })).default([]),
+  randomInjections: z.array(z.string()).default([]),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -63,3 +95,7 @@ export type InsertChat = z.infer<typeof insertChatSchema>;
 export type Chat = typeof chats.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type CustomModelConfig = typeof customModelConfigs.$inferSelect;
+export type InsertCustomModelConfig = z.infer<typeof insertCustomModelConfigSchema>;

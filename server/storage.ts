@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { type Chat, type InsertChat, type Message, type InsertMessage, type User, type UpsertUser, type InsertUser, chats, messages, users } from "@shared/schema";
+import { type Chat, type InsertChat, type Message, type InsertMessage, type User, type UpsertUser, type InsertUser, type AdminUser, type InsertAdminUser, type CustomModelConfig, type InsertCustomModelConfig, chats, messages, users, adminUsers, customModelConfigs } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -11,6 +11,13 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  getAdminUser(id: string): Promise<AdminUser | undefined>;
+  getAdminUserByUsername(username: string): Promise<AdminUser | undefined>;
+  createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
+  
+  getCustomModelConfig(modeKey: string): Promise<CustomModelConfig | undefined>;
+  upsertCustomModelConfig(config: InsertCustomModelConfig): Promise<CustomModelConfig>;
   
   createChat(chat: InsertChat): Promise<Chat>;
   getChat(id: string): Promise<Chat | undefined>;
@@ -28,6 +35,8 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
+  private adminUsers: Map<string, AdminUser> = new Map();
+  private customModelConfigs: Map<string, CustomModelConfig> = new Map();
   private chats: Map<string, Chat> = new Map();
   private messages: Map<string, Message> = new Map();
   public sessionStore: session.SessionStore;
@@ -70,6 +79,44 @@ export class MemStorage implements IStorage {
     };
     this.users.set(user.id, user);
     return user;
+  }
+
+  async getAdminUser(id: string): Promise<AdminUser | undefined> {
+    return this.adminUsers.get(id);
+  }
+
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    return Array.from(this.adminUsers.values()).find(a => a.username === username);
+  }
+
+  async createAdminUser(adminData: InsertAdminUser): Promise<AdminUser> {
+    const id = crypto.randomUUID();
+    const admin: AdminUser = {
+      id,
+      username: adminData.username,
+      password: adminData.password,
+      createdAt: new Date(),
+    };
+    this.adminUsers.set(id, admin);
+    return admin;
+  }
+
+  async getCustomModelConfig(modeKey: string): Promise<CustomModelConfig | undefined> {
+    return Array.from(this.customModelConfigs.values()).find(c => c.modeKey === modeKey);
+  }
+
+  async upsertCustomModelConfig(configData: InsertCustomModelConfig): Promise<CustomModelConfig> {
+    const existing = await this.getCustomModelConfig(configData.modeKey);
+    const config: CustomModelConfig = {
+      id: existing?.id ?? crypto.randomUUID(),
+      modeKey: configData.modeKey,
+      basePrompt: configData.basePrompt,
+      eventTriggers: configData.eventTriggers ?? [],
+      randomInjections: configData.randomInjections ?? [],
+      updatedAt: new Date(),
+    };
+    this.customModelConfigs.set(config.id, config);
+    return config;
   }
 
   async createChat(chat: InsertChat): Promise<Chat> {
@@ -196,6 +243,41 @@ export class DbStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async getAdminUser(id: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return admin;
+  }
+
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return admin;
+  }
+
+  async createAdminUser(adminData: InsertAdminUser): Promise<AdminUser> {
+    const [admin] = await db.insert(adminUsers).values(adminData).returning();
+    return admin;
+  }
+
+  async getCustomModelConfig(modeKey: string): Promise<CustomModelConfig | undefined> {
+    const [config] = await db.select().from(customModelConfigs).where(eq(customModelConfigs.modeKey, modeKey));
+    return config;
+  }
+
+  async upsertCustomModelConfig(configData: InsertCustomModelConfig): Promise<CustomModelConfig> {
+    const [config] = await db
+      .insert(customModelConfigs)
+      .values(configData)
+      .onConflictDoUpdate({
+        target: customModelConfigs.modeKey,
+        set: {
+          ...configData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return config;
   }
 
   async createChat(chat: InsertChat): Promise<Chat> {
