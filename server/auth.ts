@@ -47,10 +47,11 @@ export function setupAuth(app: Express) {
     const userAgent = req.headers['user-agent'] || '';
     const isMobileApp = hasDeviceId || userAgent.toLowerCase().includes('capacitor');
     
-    console.log('[CSRF] Device-Id:', hasDeviceId, 'User-Agent:', userAgent.substring(0, 50), 'IsMobile:', isMobileApp);
+    // Add debug header for troubleshooting
+    res.setHeader('X-Debug-Mobile', isMobileApp ? 'yes' : 'no');
+    res.setHeader('X-Debug-DeviceId', hasDeviceId ? 'yes' : 'no');
     
     if (isMobileApp) {
-      console.log('[CSRF] Skipping CSRF check for mobile app');
       return next();
     }
     
@@ -217,7 +218,9 @@ export function setupAuth(app: Express) {
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   // Skip CSRF validation for mobile apps (they use X-Device-Id and aren't vulnerable to CSRF)
-  const isMobileApp = req.headers['x-device-id'] && req.headers['user-agent']?.includes('Capacitor');
+  const hasDeviceId = !!req.headers['x-device-id'];
+  const userAgent = req.headers['user-agent'] || '';
+  const isMobileApp = hasDeviceId || userAgent.toLowerCase().includes('capacitor');
   
   if (!isMobileApp) {
     // For web browsers, validate CSRF token
