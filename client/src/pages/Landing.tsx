@@ -20,7 +20,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="default" asChild data-testid="button-header-start">
-              <Link href="/chat">
+              <Link href="/auth">
                 Get Started
               </Link>
             </Button>

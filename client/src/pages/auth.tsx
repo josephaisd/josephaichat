@@ -73,7 +73,7 @@ export default function AuthPage() {
         description: "You've successfully logged in.",
       });
 
-      window.location.href = "/";
+      window.location.href = "/chat";
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -112,7 +112,7 @@ export default function AuthPage() {
         description: "Welcome to Joseph AI!",
       });
 
-      window.location.href = "/";
+      window.location.href = "/chat";
     } catch (error: any) {
       toast({
         variant: "destructive",

@@ -129,6 +129,12 @@ export default function Header({ onToggleSidebar, sidebarOpen = false }: HeaderP
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                       window.location.href = "/";
+                    }} data-testid="button-gohome">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Home</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
