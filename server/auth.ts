@@ -219,16 +219,21 @@ export function setupAuth(app: Express) {
     try {
       const { username, password } = req.body;
 
+      console.log(`[Admin Login] Attempting login for username: ${username}`);
+
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required" });
       }
 
       const admin = await storage.getAdminUserByUsername(username);
       if (!admin) {
+        console.log(`[Admin Login] No admin found with username: ${username}`);
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
+      console.log(`[Admin Login] Admin found: ${admin.username}, checking password...`);
       const isValid = await bcrypt.compare(password, admin.password);
+      console.log(`[Admin Login] Password valid: ${isValid}`);
       if (!isValid) {
         return res.status(401).json({ error: "Invalid username or password" });
       }
@@ -329,6 +334,9 @@ export async function bootstrapAdmin() {
   const adminUsername = process.env.ADMIN_USERNAME;
   const adminPassword = process.env.ADMIN_PASSWORD;
   
+  console.log(`[Bootstrap] ADMIN_USERNAME from env: ${adminUsername}`);
+  console.log(`[Bootstrap] ADMIN_PASSWORD set: ${!!adminPassword}`);
+  
   if (!adminUsername || !adminPassword) {
     console.log("No ADMIN_USERNAME or ADMIN_PASSWORD set. Skipping admin bootstrap.");
     return;
@@ -337,7 +345,7 @@ export async function bootstrapAdmin() {
   try {
     const existingAdmin = await storage.getAdminUserByUsername(adminUsername);
     if (existingAdmin) {
-      console.log("Admin user already exists. Skipping bootstrap.");
+      console.log(`[Bootstrap] Admin user '${adminUsername}' already exists. Skipping bootstrap.`);
       return;
     }
     
@@ -347,7 +355,7 @@ export async function bootstrapAdmin() {
       password: hashedPassword,
     });
     
-    console.log(`Admin user '${adminUsername}' created successfully.`);
+    console.log(`[Bootstrap] Admin user '${adminUsername}' created successfully.`);
   } catch (error) {
     console.error("Failed to bootstrap admin user:", error);
   }
