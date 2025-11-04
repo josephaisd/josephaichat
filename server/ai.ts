@@ -131,11 +131,11 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
                   return response;
                 } catch (openrouterError) {
                   console.error("[AI] OpenRouter also failed:", openrouterError);
-                  return "Sorry, Joseph AI is currently down.";
+                  return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
                 }
               } else {
                 console.error("[AI] No fallback available (OpenRouter not configured)");
-                return "Sorry, Joseph AI is currently down.";
+                return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
               }
             }
           } else if (openrouterClient) {
@@ -156,10 +156,10 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
               return response;
             } catch (error) {
               console.error("[AI] OpenRouter error:", error);
-              return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+              return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
             }
           } else {
-            return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+            return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
           }
         }
       } catch (error) {
@@ -197,11 +197,11 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
           return response;
         } catch (openrouterError) {
           console.error("[AI] OpenRouter also failed:", openrouterError);
-          return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+          return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
         }
       } else {
         console.error("[AI] No fallback available (OpenRouter not configured)");
-        return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+        return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
       }
     }
   } else if (openrouterClient) {
@@ -217,9 +217,9 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
       return response;
     } catch (error) {
       console.error("[AI] OpenRouter error:", error);
-      return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+      return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
     }
   } else {
-    return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active, but we expect to be back online shortly.";
+    return "I apologize. Joseph AI is in maintenance mode and temporarily unavailable. Limited responses are active for the Joseph Realistic model, but we expect to be back online shortly.";
   }
 }
