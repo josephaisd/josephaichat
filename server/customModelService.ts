@@ -43,7 +43,7 @@ function getRandomInjection(
   }
 
   const randomValue = Math.random();
-  const shouldInject = randomValue < 0.99;
+  const shouldInject = randomValue < 0.15;
   
   console.log(`[CustomModel] Random injection check: ${randomValue.toFixed(3)} < 0.99 = ${shouldInject}`);
   console.log(`[CustomModel] Available injections: ${randomInjections.length}`);
