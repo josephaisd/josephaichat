@@ -88,42 +88,46 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
           return customResult.customResponse;
         }
 
-        if (customResult.shouldUseCustom && customResult.injectedMessage) {
-          console.log("[AI] Using random injection message:", customResult.injectedMessage);
-          return customResult.injectedMessage;
-        }
-
-        if (customResult.shouldUseCustom && customResult.basePrompt) {
-          console.log("[AI] Using custom base prompt");
-          
-          const enhancedSystemPrompt = customResult.basePrompt;
+        if (customResult.shouldUseCustom) {
+          const baseSystemPrompt = customResult.basePrompt || modeConfig.systemPrompt;
+          const injectionPrefix = customResult.injectedMessage || null;
           
           if (githubClient) {
             try {
-              console.log("[AI] Trying GitHub AI with custom base prompt...");
+              console.log("[AI] Trying GitHub AI with custom config...");
               const response = await tryGenerateWithClient(
                 githubClient,
                 "openai/gpt-4o",
                 formattedMessages,
                 modeConfig,
-                enhancedSystemPrompt
+                baseSystemPrompt
               );
               console.log("[AI] GitHub AI succeeded");
+              
+              if (injectionPrefix) {
+                console.log("[AI] Prepending random injection:", injectionPrefix);
+                return `${injectionPrefix}\n\n${response}`;
+              }
               return response;
             } catch (error: any) {
               console.log("[AI] GitHub AI failed:", error.status || error.message);
               
               if (openrouterClient) {
                 try {
-                  console.log("[AI] Falling back to OpenRouter with custom base prompt...");
+                  console.log("[AI] Falling back to OpenRouter with custom config...");
                   const response = await tryGenerateWithClient(
                     openrouterClient,
                     "openai/gpt-4o",
                     formattedMessages,
                     modeConfig,
-                    enhancedSystemPrompt
+                    baseSystemPrompt
                   );
                   console.log("[AI] OpenRouter succeeded");
+                  
+                  if (injectionPrefix) {
+                    console.log("[AI] Prepending random injection:", injectionPrefix);
+                    return `${injectionPrefix}\n\n${response}`;
+                  }
                   return response;
                 } catch (openrouterError) {
                   console.error("[AI] OpenRouter also failed:", openrouterError);
@@ -136,14 +140,19 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
             }
           } else if (openrouterClient) {
             try {
-              console.log("[AI] Using OpenRouter with custom base prompt (GitHub not configured)...");
+              console.log("[AI] Using OpenRouter with custom config (GitHub not configured)...");
               const response = await tryGenerateWithClient(
                 openrouterClient,
                 "openai/gpt-4o",
                 formattedMessages,
                 modeConfig,
-                enhancedSystemPrompt
+                baseSystemPrompt
               );
+              
+              if (injectionPrefix) {
+                console.log("[AI] Prepending random injection:", injectionPrefix);
+                return `${injectionPrefix}\n\n${response}`;
+              }
               return response;
             } catch (error) {
               console.error("[AI] OpenRouter error:", error);
