@@ -131,11 +131,11 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
                   return response;
                 } catch (openrouterError) {
                   console.error("[AI] OpenRouter also failed:", openrouterError);
-                  throw new Error("Failed to generate AI response from both providers");
+                  return "Sorry, Joseph AI is currently down.";
                 }
               } else {
                 console.error("[AI] No fallback available (OpenRouter not configured)");
-                throw error;
+                return "Sorry, Joseph AI is currently down.";
               }
             }
           } else if (openrouterClient) {
@@ -156,10 +156,10 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
               return response;
             } catch (error) {
               console.error("[AI] OpenRouter error:", error);
-              throw new Error("Failed to generate AI response");
+              return "Sorry, Joseph AI is currently down.";
             }
           } else {
-            throw new Error("No AI providers configured. Please set GITHUB_TOKEN or OPENROUTER_API_KEY");
+            return "Sorry, Joseph AI is currently down.";
           }
         }
       } catch (error) {
@@ -197,11 +197,11 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
           return response;
         } catch (openrouterError) {
           console.error("[AI] OpenRouter also failed:", openrouterError);
-          throw new Error("Failed to generate AI response from both providers");
+          return "Sorry, Joseph AI is currently down.";
         }
       } else {
         console.error("[AI] No fallback available (OpenRouter not configured)");
-        throw error;
+        return "Sorry, Joseph AI is currently down.";
       }
     }
   } else if (openrouterClient) {
@@ -217,9 +217,9 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
       return response;
     } catch (error) {
       console.error("[AI] OpenRouter error:", error);
-      throw new Error("Failed to generate AI response");
+      return "Sorry, Joseph AI is currently down.";
     }
   } else {
-    throw new Error("No AI providers configured. Please set GITHUB_TOKEN or OPENROUTER_API_KEY");
+    return "Sorry, Joseph AI is currently down.";
   }
 }
