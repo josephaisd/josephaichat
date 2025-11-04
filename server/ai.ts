@@ -88,17 +88,19 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
           return customResult.customResponse;
         }
 
-        if (customResult.shouldUseCustom && (customResult.injectedMessage || customResult.basePrompt)) {
-          console.log("[AI] Using custom model configuration");
+        if (customResult.shouldUseCustom && customResult.injectedMessage) {
+          console.log("[AI] Using random injection message:", customResult.injectedMessage);
+          return customResult.injectedMessage;
+        }
+
+        if (customResult.shouldUseCustom && customResult.basePrompt) {
+          console.log("[AI] Using custom base prompt");
           
-          const baseSystemPrompt = customResult.basePrompt || modeConfig.systemPrompt;
-          const enhancedSystemPrompt = customResult.injectedMessage 
-            ? `${customResult.injectedMessage}\n\n${baseSystemPrompt}`
-            : baseSystemPrompt;
+          const enhancedSystemPrompt = customResult.basePrompt;
           
           if (githubClient) {
             try {
-              console.log("[AI] Trying GitHub AI with injected message...");
+              console.log("[AI] Trying GitHub AI with custom base prompt...");
               const response = await tryGenerateWithClient(
                 githubClient,
                 "openai/gpt-4o",
@@ -113,7 +115,7 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
               
               if (openrouterClient) {
                 try {
-                  console.log("[AI] Falling back to OpenRouter with injected message...");
+                  console.log("[AI] Falling back to OpenRouter with custom base prompt...");
                   const response = await tryGenerateWithClient(
                     openrouterClient,
                     "openai/gpt-4o",
@@ -134,7 +136,7 @@ export async function generateAIResponse(messages: Message[], mode: AiMode = AI_
             }
           } else if (openrouterClient) {
             try {
-              console.log("[AI] Using OpenRouter with injected message (GitHub not configured)...");
+              console.log("[AI] Using OpenRouter with custom base prompt (GitHub not configured)...");
               const response = await tryGenerateWithClient(
                 openrouterClient,
                 "openai/gpt-4o",
