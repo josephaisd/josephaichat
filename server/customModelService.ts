@@ -42,11 +42,17 @@ function getRandomInjection(
     return null;
   }
 
-  const shouldInject = Math.random() < 0.99;
+  const randomValue = Math.random();
+  const shouldInject = randomValue < 0.99;
+  
+  console.log(`[CustomModel] Random injection check: ${randomValue.toFixed(3)} < 0.99 = ${shouldInject}`);
+  console.log(`[CustomModel] Available injections: ${randomInjections.length}`);
   
   if (shouldInject) {
     const randomIndex = Math.floor(Math.random() * randomInjections.length);
-    return randomInjections[randomIndex];
+    const selectedMessage = randomInjections[randomIndex];
+    console.log(`[CustomModel] Injecting message: "${selectedMessage}"`);
+    return selectedMessage;
   }
 
   return null;
@@ -58,13 +64,21 @@ export async function processWithCustomModel(
   personalityMode: AiMode
 ): Promise<ProcessResult> {
   try {
+    console.log(`[CustomModel] Processing request for mode: ${modeKey}`);
     const config = await storage.getCustomModelConfig(modeKey);
 
     if (!config) {
+      console.log(`[CustomModel] No config found for mode: ${modeKey}`);
       return {
         shouldUseCustom: false,
       };
     }
+    
+    console.log(`[CustomModel] Config loaded for ${modeKey}:`, {
+      hasBasePrompt: !!config.basePrompt,
+      eventTriggersCount: Array.isArray(config.eventTriggers) ? config.eventTriggers.length : 0,
+      randomInjectionsCount: Array.isArray(config.randomInjections) ? config.randomInjections.length : 0,
+    });
 
     let eventTriggers: Array<{ trigger: string; response: string }> = [];
     let randomInjections: string[] = [];
